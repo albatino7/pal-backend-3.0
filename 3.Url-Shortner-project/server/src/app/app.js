@@ -9,24 +9,35 @@ import urlModel from "../model/url.model.js";
 
 app.use("/api/url", urlRouter);
 
-app.post("/:code", async (req, res) => {
-  const { code } = req.params;
-  //   console.log("hello");
+app.get("/:code", async (req, res, next) => {
+  try {
+    const { code } = req.params;
 
-  const sendUrl = await urlModel.findOne({
-    shortCode: code,
-  });
-
-  res.redirect(sendUrl.orignalUrl);
-
-  await urlModel.findOneAndUpdate(
-    {
+    const sendUrl = await urlModel.findOne({
       shortCode: code,
-    },
-    {
-      $inc: { clicks: 1 },
-    },
-  );
-});
+    });
 
+    // Short code does not exist
+    if (!sendUrl) {
+      return res.status(404).json({
+        message: "Your Shortcode is Not Found in Db",
+      });
+    }
+
+    // Increase click count
+    await urlModel.findOneAndUpdate(
+      {
+        shortCode: code,
+      },
+      {
+        $inc: { clicks: 1 },
+      },
+    );
+
+    // Redirect to original URL
+    return res.redirect(sendUrl.orignalUrl);
+  } catch (error) {
+    next(error);
+  }
+});
 export default app;

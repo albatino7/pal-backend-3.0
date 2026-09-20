@@ -30,7 +30,7 @@ export const VerifyrefreshToken = (token) => {
 
   if (!decoded) {
     const error = new Error("Invalid RefreshToken userside");
-    error.status = 400;
+    error.status = 401;
     throw error;
   }
   return decoded;

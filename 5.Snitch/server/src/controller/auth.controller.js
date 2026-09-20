@@ -37,6 +37,7 @@ export const registerController = async (req, res, next) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        role: newUser.role,
         refreshToken: newUser.refreshToken,
         accessToken: accesToken,
       },
@@ -118,8 +119,10 @@ export const refreshController = async (req, res, next) => {
     message: "RefreshToken is Created Sucessfully",
     data: {
       user: {
+        id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         accesToken,
       },
     },

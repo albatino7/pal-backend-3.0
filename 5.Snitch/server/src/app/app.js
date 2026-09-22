@@ -10,8 +10,10 @@ app.use(express.urlencoded({ extended: true }));
 
 //Routes
 import authRouter from "../routes/auth.route.js";
+import productRouter from "../routes/products.route.js";
 
 app.use("/api/auth", authRouter);
+app.use("/api/products", productRouter);
 
 //Global Error Handler
 app.use(globalErrorHandler);

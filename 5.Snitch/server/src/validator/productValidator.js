@@ -72,14 +72,6 @@ export const productvalidateResult = [
     .isInt({ min: 0 })
     .withMessage("Stock must be 0 or greater"),
 
-  // seller
-  body("seller")
-    .notEmpty()
-    .withMessage("Seller is required")
-    .bail()
-    .isMongoId()
-    .withMessage("Seller must be a valid MongoDB ID"),
-
   // finally run validationResult
   validate,
 ];

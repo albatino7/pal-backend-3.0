@@ -4,7 +4,7 @@ export const checkUser = async (req, res, next) => {
   try {
     const accessToken = req.headers.authorization?.split(" ")[1];
     ///keep authorization in small and at postman too
-    console.log(accessToken);
+    // console.log(accessToken);
 
     if (!accessToken) {
       const error = new Error("Please send accessToken in Headers");

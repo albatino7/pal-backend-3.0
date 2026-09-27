@@ -2,7 +2,11 @@ import { cartModel } from "../model/cart.model.js";
 import { productModel } from "../model/product.model.js";
 
 export const addToCart = async (req, res, next) => {
+  // console.log(req.body);
+
   const { productId, quantity, sizes } = req.body;
+
+  console.log(req.body);
 
   const product = await productModel.findById(productId);
 
@@ -21,7 +25,7 @@ export const addToCart = async (req, res, next) => {
 
   if (selectedSize.stock < quantity) {
     const error = new Error("insufficent Stock");
-    error.status(400);
+    error.status = 400;
     throw error;
   }
 
@@ -29,9 +33,9 @@ export const addToCart = async (req, res, next) => {
     (await cartModel.findOne({ user: req.user.userId })) ??
     (await cartModel.create({ user: req.user.userId }));
 
-  const productInCart =
-    cart.products.find((p) => p.product.toString() === productId) &&
-    p.size === sizes;
+  const productInCart = cart.products.find(
+    (p) => p.product.toString() === productId && p.size === sizes,
+  );
 
   if (productInCart) {
     if (productInCart.quantity + quantity > selectedSize.stock) {

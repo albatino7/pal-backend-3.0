@@ -1,11 +1,18 @@
 import express from "express";
 import { checkUser } from "../middleware/checkUser.middleware.js";
-import { cartValidation } from "../validator/cartValidation";
-import { addToCart, getCart } from "../controller/cart.controller";
+import { cartValidation } from "../validator/cartValidation.js";
+import { addToCart, getCart } from "../controller/cart.controller.js";
+import upload from "../config/multer.js";
 
 const cartRoute = express.Router();
 
-cartRoute.post("/addtocart", checkUser, cartValidation, addToCart);
+cartRoute.post(
+  "/addtocart",
+  upload.none(),
+  checkUser,
+  cartValidation,
+  addToCart,
+);
 
 cartRoute.get("/item", checkUser, getCart);
 

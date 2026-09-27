@@ -1,8 +1,9 @@
 import { imagekitio } from "../config/ImageKit.js";
 import { toFile } from "@imagekit/nodejs";
 import { productModel } from "../model/product.model.js";
-import { imageUpload } from "../config/ImageKit.js";
+// import { imageUpload } from "../config/ImageKit.js";
 
+//create Product in DB by Seller
 export const createProductController = async (req, res, next) => {
   try {
     // console.log(req.body);
@@ -18,34 +19,34 @@ export const createProductController = async (req, res, next) => {
     }
 
     //we can also upload image like this but for loop is better for understanding and all
+    //THIS IS BETTER APPROACH FOR Production
+    const uploadedImages = await Promise.all(
+      req.files.map(async (file) => {
+        const resultFile = await imagekitio.files.upload({
+          file: await toFile(file.buffer),
+          fileName: file.originalname,
+        });
 
-    // const uploadedImages = await Promise.all(
-    //   req.files.map(async (file) => {
-    //     const resultFile = await imagekitio.files.upload({
-    //       file: await toFile(file.buffer),
-    //       fileName: file.originalname,
-    //     });
+        return resultFile.url;
+      }),
+    );
 
-    //     return resultFile.url;
-    //   }),
-    // );
+    // const fileUrl = [];
+    // // file.originalname
+    // for (let i = 0; i < req.files.length; i++) {
+    //   const result = await imageUpload({
+    //     buffer: req.files[i].buffer,
+    //     filename: req.files[i].originalname,
+    //   });
 
-    const fileUrl = [];
-    // file.originalname
-    for (let i = 0; i < req.files.length; i++) {
-      const result = await imageUpload({
-        buffer: req.files[i].buffer,
-        filename: req.files[i].originalname,
-      });
-
-      fileUrl.push(result);
-      console.log("image kit at controller ", result);
-    }
+    //   fileUrl.push(result);
+    //   console.log("image kit at controller ", result);
+    // }
 
     const newProduct = await productModel.create({
       title: title,
       description: description,
-      images: fileUrl,
+      images: uploadedImages,
 
       // price: {
       //   amount: Number(req.body["price.amount"]),
@@ -77,11 +78,77 @@ export const createProductController = async (req, res, next) => {
   }
 };
 
+//get All product including published true or false both
+
 export const gettAllproductController = async (req, res, next) => {
-  const allProduct = await productModel.find();
+  const allProduct = await productModel.find({});
 
   res.status(200).json({
     message: "Your all available products",
     products: allProduct,
+  });
+};
+
+//get only published products //
+export const publishedProducts = async (req, res) => {
+  const products = await productModel.find({ published: true });
+
+  res.status(200).json({
+    message: "all published true product for users",
+    data: {
+      products,
+    },
+  });
+};
+
+//make product published false by :product:ID
+
+export const unlistProductController = async (req, res, next) => {
+  const { id } = req.params;
+
+  const product = await productModel.findById(id);
+
+  if (!product) {
+    const error = new Error("Product with this id Not found");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedProduct = await productModel.findByIdAndUpdate(
+    {
+      _id: id,
+    },
+    { published: false },
+  );
+
+  res.status(200).json({
+    message: "Product unlist false  Sucessfully",
+    data: updatedProduct,
+  });
+};
+
+//make product published true by :product:ID
+
+export const listProductController = async (req, res, next) => {
+  const { id } = req.params;
+
+  const product = await productModel.findById(id);
+
+  if (!product) {
+    const error = new Error("Product with this id Not found");
+    error.status = 400;
+    throw error;
+  }
+
+  const updatedProduct = await productModel.findByIdAndUpdate(
+    {
+      _id: id,
+    },
+    { published: true },
+  );
+
+  res.status(200).json({
+    message: "Product list ture Sucessfully",
+    data: updatedProduct,
   });
 };

@@ -1,0 +1,3000 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MongoDB Aggregation Pipeline — Backend API Teaching Notes</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:ital,wght@0,300;0,600;0,700;0,900;1,300&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #0e0f14;
+        --paper: #f5f2eb;
+        --paper2: #ede9df;
+        --paper3: #e4dfd3;
+        --rule: #d4cebc;
+        --muted: #6b6455;
+        --accent: #c84b1f;
+        --accent2: #1a6b4a;
+        --accent3: #1b4587;
+        --gold: #b8860b;
+        --code-bg: #1a1c24;
+        --code-text: #e2dccc;
+        --flag-c: #5ba4cf;
+        --val-c: #f4a261;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .layout {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* ============ SIDEBAR ============ */
+      nav {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--ink);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 32px 0 40px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+      }
+      nav::-webkit-scrollbar {
+        width: 4px;
+      }
+      nav::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+      }
+
+      .nav-brand {
+        padding: 0 24px 28px;
+      }
+      .nav-brand .logo {
+        font-family: "Fraunces", serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.01em;
+      }
+      .nav-brand .logo span {
+        color: var(--accent);
+      }
+      .nav-brand .sub {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.35);
+        letter-spacing: 0.06em;
+        margin-top: 4px;
+      }
+
+      .nav-group-label {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.25);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 20px 24px 6px;
+      }
+
+      nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 12.5px;
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: none;
+        padding: 9px 24px;
+        border-left: 2px solid transparent;
+        transition: all 0.15s;
+        line-height: 1.4;
+      }
+      nav a:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      nav a.active {
+        color: #fff;
+        border-left-color: var(--accent);
+        background: rgba(200, 75, 31, 0.08);
+      }
+      .nav-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.5);
+        flex-shrink: 0;
+        transition: all 0.15s;
+      }
+      nav a:hover .nav-num,
+      nav a.active .nav-num {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      /* ============ MAIN ============ */
+      main {
+        flex: 1;
+        max-width: calc(99% - 256px);
+        padding: 56px 56px 80px;
+      }
+
+      /* ============ TYPOGRAPHY ============ */
+      .hero-eyebrow {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 16px;
+      }
+
+      .hero h1 {
+        font-family: "Fraunces", serif;
+        font-size: clamp(36px, 5vw, 58px);
+        font-weight: 900;
+        color: var(--ink);
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin-bottom: 20px;
+      }
+      .hero h1 em {
+        font-style: italic;
+        color: var(--accent);
+      }
+
+      .hero-desc {
+        font-family: "DM Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        color: var(--muted);
+        max-width: 560px;
+        line-height: 1.65;
+        margin-bottom: 20px;
+      }
+
+      .hero-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .hero-tag {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--muted);
+        border: 1px solid var(--rule);
+        border-radius: 20px;
+        padding: 4px 12px;
+      }
+
+      .hero {
+        margin-bottom: 64px;
+        padding-bottom: 40px;
+      }
+
+      .section {
+        margin-bottom: 72px;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+      .section-num-big {
+        font-family: "Fraunces", serif;
+        font-size: 48px;
+        font-weight: 900;
+        color: var(--rule);
+        line-height: 0.9;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .section-title {
+        font-family: "Fraunces", serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.2;
+      }
+      .section-subtitle {
+        font-family: "DM Sans", sans-serif;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      h3 {
+        font-family: "Fraunces", serif;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--ink);
+        margin: 28px 0 12px;
+      }
+      h4 {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 20px 0 8px;
+      }
+
+      p {
+        font-family: "DM Sans", sans-serif;
+        font-size: 14.5px;
+        font-weight: 400;
+        color: #2a2720;
+        line-height: 1.7;
+        margin-bottom: 12px;
+      }
+
+      p strong {
+        font-weight: 500;
+        color: var(--ink);
+      }
+
+      code {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--accent);
+        background: var(--paper3);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+
+      /* ============ CONCEPT BOX ============ */
+      .concept {
+        background: var(--paper2);
+        border-left: 3px solid var(--accent3);
+        border-radius: 0 8px 8px 0;
+        padding: 16px 20px;
+        margin: 16px 0;
+      }
+      .concept-label {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 9px;
+        color: var(--accent3);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 8px;
+      }
+      .concept p {
+        font-size: 14px;
+        color: var(--ink);
+        line-height: 1.65;
+        margin-bottom: 0;
+      }
+      .concept p + p {
+        margin-top: 8px;
+      }
+
+      /* ============ NOTE BOX ============ */
+      .note {
+        background: #fef9ec;
+        border: 1px solid #edd97a;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 16px 0;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .note-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+        line-height: 1.5;
+      }
+      .note p {
+        font-size: 13px;
+        color: #5c4a00;
+        line-height: 1.6;
+        margin-bottom: 0;
+      }
+      .note p strong {
+        color: #3d3000;
+      }
+
+      /* ============ WARNING BOX ============ */
+      .warn {
+        background: #fef2f2;
+        border: 1px solid #fca5a5;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 16px 0;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .warn p {
+        font-size: 13px;
+        color: #7f1d1d;
+        line-height: 1.6;
+        margin-bottom: 0;
+      }
+      .warn p strong {
+        color: #991b1b;
+      }
+
+      /* ============ STEP LABEL ============ */
+      .step-label {
+        display: inline-block;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        font-weight: 600;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 3px 10px;
+        border-radius: 4px;
+        background: var(--accent);
+        margin-bottom: 12px;
+      }
+      .step-label.green {
+        background: var(--accent2);
+      }
+      .step-label.blue {
+        background: var(--accent3);
+      }
+      .step-label.gold {
+        background: var(--gold);
+      }
+
+      /* ============ CODE BLOCK ============ */
+      .code-wrap {
+        margin: 16px 0;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #2a2d38;
+      }
+      .code-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #14161e;
+        padding: 8px 16px;
+        border-bottom: 1px solid #2a2d38;
+      }
+      .code-label {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        letter-spacing: 0.04em;
+      }
+      .copy-btn {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        padding: 2px 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .copy-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .code-wrap pre {
+        background: var(--code-bg);
+        color: var(--code-text);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12.5px;
+        line-height: 1.65;
+        padding: 16px 20px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+      }
+      .code-wrap pre::-webkit-scrollbar {
+        height: 4px;
+      }
+      .code-wrap pre::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+      }
+
+      .c-cmd {
+        color: #87ceeb;
+        font-weight: 600;
+      }
+      .c-flag {
+        color: #5ba4cf;
+      }
+      .c-val {
+        color: #f4a261;
+      }
+      .c-str {
+        color: #98c379;
+      }
+      .c-comment {
+        color: rgba(255, 255, 255, 0.28);
+        font-style: italic;
+      }
+      .c-key {
+        color: #c678dd;
+      }
+      .c-pipe {
+        color: #e5c07b;
+      }
+
+      /* ============ FLAG TABLE ============ */
+      .flag-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 13px;
+      }
+      .flag-table th {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: var(--paper3);
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--rule);
+      }
+      .flag-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      .flag-table tr:hover {
+        background: var(--paper2);
+      }
+      .f-name {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--flag-c);
+        white-space: nowrap;
+      }
+      .f-val {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--val-c);
+      }
+      .f-desc {
+        font-size: 13px;
+        color: var(--ink);
+      }
+      .f-why {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* ============ DIVIDER ============ */
+      hr.divider {
+        border: none;
+        border-top: 1px solid var(--rule);
+        margin: 40px 0;
+      }
+
+      /* ============ FLOW DIAGRAM ============ */
+      .flow {
+        margin: 20px 0;
+      }
+      .flow-step {
+        display: flex;
+        gap: 16px;
+        position: relative;
+      }
+      .flow-line {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .flow-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        margin-top: 5px;
+        flex-shrink: 0;
+        z-index: 1;
+      }
+      .flow-connector {
+        width: 2px;
+        flex: 1;
+        background: var(--rule);
+        min-height: 24px;
+        margin: 2px 0;
+      }
+      .flow-content {
+        padding-bottom: 20px;
+      }
+      .flow-title {
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .flow-detail {
+        font-family: "DM Sans", sans-serif;
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      /* ============ WATERMARK ============ */
+      .watermark {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(14, 15, 20, 0.9);
+        border: 1px solid rgba(200, 75, 31, 0.3);
+        border-radius: 8px;
+        padding: 6px 12px;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 50;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .watermark-logo {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        background: var(--accent);
+      }
+      .watermark-text {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 0.08em;
+      }
+
+      /* ============ FOOTER ============ */
+      footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 2px solid var(--rule);
+        padding-top: 20px;
+        margin-top: 40px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--muted);
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* ============ DATASET BLOCK ============ */
+      .dataset-intro {
+        background: var(--paper2);
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        border-left: 3px solid var(--accent);
+      }
+      .dataset-intro p {
+        margin-bottom: 0;
+        font-size: 14px;
+      }
+
+      /* ============ OPERATOR ENTRY ============ */
+      .op-entry {
+        margin: 20px 0;
+      }
+      .op-entry h4 {
+        margin: 16px 0 4px;
+      }
+      .op-desc {
+        font-size: 13.5px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      /* ============ CASE STUDY ============ */
+      .case-study {
+        background: var(--paper2);
+        border-radius: 10px;
+        padding: 24px 28px;
+        margin: 20px 0 32px;
+        border: 1px solid var(--rule);
+      }
+      .case-study h3 {
+        margin-top: 0;
+      }
+      .case-question {
+        font-family: "Fraunces", serif;
+        font-style: italic;
+        font-size: 16px;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+
+      @media (max-width: 768px) {
+        nav {
+          display: none;
+        }
+        main {
+          padding: 32px 24px 60px;
+          max-width: 100%;
+        }
+        .section-header {
+          flex-direction: column;
+          gap: 4px;
+        }
+        footer {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- ===================== SIDEBAR ===================== -->
+      <nav>
+        <div class="nav-brand">
+          <div class="logo">BACKEND<span>.</span>DB</div>
+          <div class="sub">Aggregation Backend Workshop</div>
+        </div>
+
+        <div class="nav-group-label">Overview</div>
+        <a href="#problem"><span class="nav-num">01</span> The Problem</a>
+        <a href="#mental-model"><span class="nav-num">02</span> Mental Model</a>
+
+        <div class="nav-group-label">Stages</div>
+        <a href="#match"><span class="nav-num">03</span> $match</a>
+        <a href="#group"><span class="nav-num">04</span> $group</a>
+        <a href="#project"><span class="nav-num">05</span> $project</a>
+        <a href="#sort"><span class="nav-num">06</span> $sort</a>
+        <a href="#limit"><span class="nav-num">07</span> $limit</a>
+        <a href="#skip"><span class="nav-num">08</span> $skip</a>
+        <a href="#unwind"><span class="nav-num">09</span> $unwind</a>
+        <a href="#lookup"><span class="nav-num">10</span> $lookup</a>
+        <a href="#graphlookup"><span class="nav-num">11</span> $graphLookup</a>
+        <a href="#addfields"
+          ><span class="nav-num">12</span> $addFields / $set</a
+        >
+        <a href="#unset"><span class="nav-num">13</span> $unset</a>
+        <a href="#replaceroot"><span class="nav-num">14</span> $replaceRoot</a>
+        <a href="#out"><span class="nav-num">15</span> $out</a>
+        <a href="#merge"><span class="nav-num">16</span> $merge</a>
+        <a href="#count"><span class="nav-num">17</span> $count</a>
+        <a href="#sample"><span class="nav-num">18</span> $sample</a>
+        <a href="#facet"><span class="nav-num">19</span> $facet</a>
+        <a href="#bucket"><span class="nav-num">20</span> $bucket</a>
+        <a href="#bucketauto"><span class="nav-num">21</span> $bucketAuto</a>
+
+        <div class="nav-group-label">Operators</div>
+        <a href="#acc-operators"
+          ><span class="nav-num">22</span> Accumulators</a
+        >
+        <a href="#arith-operators"
+          ><span class="nav-num">23</span> Arithmetic</a
+        >
+        <a href="#comp-operators"><span class="nav-num">24</span> Comparison</a>
+        <a href="#logic-operators"><span class="nav-num">25</span> Logical</a>
+        <a href="#string-operators"><span class="nav-num">26</span> String</a>
+        <a href="#array-operators"><span class="nav-num">27</span> Array</a>
+        <a href="#date-operators"><span class="nav-num">28</span> Date</a>
+        <a href="#type-operators"
+          ><span class="nav-num">29</span> Type Conversion</a
+        >
+        <a href="#var-operators"><span class="nav-num">30</span> Variables</a>
+
+        <div class="nav-group-label">Case Studies</div>
+        <a href="#case-studies"
+          ><span class="nav-num">31</span> Combined Pipelines</a
+        >
+      </nav>
+
+      <!-- ===================== MAIN ===================== -->
+      <main>
+        <!-- ============ HERO ============ -->
+        <div class="hero">
+          <div class="hero-eyebrow">
+            Backend Domination · Database Systems · Module 07
+          </div>
+          <h1>MongoDB <em>Aggregation</em><br />Pipeline</h1>
+          <p class="hero-desc">
+            You already know find, insert, update. Today you learn the framework
+            that lets the database do the work your JS loops have been doing.
+            Every stage explained with a reason to want it first — never syntax
+            without motivation.
+          </p>
+          <div class="hero-tags">
+            <span class="hero-tag">Prerequisite: CRUD basics</span>
+            <span class="hero-tag">mongosh 7.0+</span>
+            <span class="hero-tag">4 collections · 45 documents</span>
+          </div>
+        </div>
+
+        <!-- ============ DATASET ============ -->
+        <div class="dataset-intro">
+          <p>
+            <strong>The dataset.</strong> Four collections — <code>users</code>,
+            <code>posts</code>, <code>comments</code>, <code>follows</code>.
+            These exact 45 documents appear in every example below. Every
+            <code>_id</code> referenced later (u1–u8, p1–p12, c1–c15, f1–f10)
+            maps to what you see here. Nothing is generated or altered.
+          </p>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-label">users collection — 8 documents</span>
+          </div>
+          <pre>
+[
+  { _id: "u1", name: "Aarav Sharma",   username: "aarav_codes",  email: "aarav@mail.com",   age: 22, city: "Bhopal",  joinedAt: "2024-01-15", isVerified: true,  followersCount: 1200 },
+  { _id: "u2", name: "Diya Patel",     username: "diya.travels", email: "diya@mail.com",    age: 25, city: "Indore",  joinedAt: "2024-02-20", isVerified: true,  followersCount: 4500 },
+  { _id: "u3", name: "Kabir Singh",    username: "kabir_fit",    email: "kabir@mail.com",   age: 28, city: "Bhopal",  joinedAt: "2023-11-05", isVerified: false, followersCount: 320  },
+  { _id: "u4", name: "Ananya Rao",     username: "ananya.eats",  email: "ananya@mail.com",  age: 24, city: "Indore",  joinedAt: "2024-03-10", isVerified: true,  followersCount: 8900 },
+  { _id: "u5", name: "Vihaan Gupta",   username: "vihaan_art",   email: "vihaan@mail.com",  age: 21, city: "Pune",    joinedAt: "2024-05-01", isVerified: false, followersCount: 150  },
+  { _id: "u6", name: "Ishita Verma",   username: "ishita.codes", email: "ishita@mail.com",  age: 23, city: "Bhopal",  joinedAt: "2024-01-28", isVerified: true,  followersCount: 2100 },
+  { _id: "u7", name: "Reyansh Joshi",  username: "rey_travels",  email: "reyansh@mail.com", age: 26, city: "Pune",    joinedAt: "2023-12-12", isVerified: false, followersCount: 600  },
+  { _id: "u8", name: "Myra Kapoor",    username: "myra.fitlife", email: "myra@mail.com",    age: 27, city: "Indore",  joinedAt: "2024-04-18", isVerified: true,  followersCount: 3300 }
+]
+</pre
+          >
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-label">posts collection — 12 documents</span>
+          </div>
+          <pre>
+[
+  { _id: "p1",  userId: "u1", caption: "Deployed my first MERN app today!",           tags: ["mern","webdev","nodejs"],       likesCount: 340,  commentsCount: 3, createdAt: "2024-06-01", category: "tech"    },
+  { _id: "p2",  userId: "u2", caption: "Sunset in Manali, worth every step",          tags: ["travel","himalayas","sunset"],  likesCount: 890,  commentsCount: 2, createdAt: "2024-06-03", category: "travel"  },
+  { _id: "p3",  userId: "u4", caption: "Best butter chicken in Indore, change my mind", tags: ["food","indore","foodie"],    likesCount: 1200, commentsCount: 4, createdAt: "2024-06-05", category: "food"    },
+  { _id: "p4",  userId: "u3", caption: "Leg day never lies",                           tags: ["fitness","gym","legday"],       likesCount: 210,  commentsCount: 1, createdAt: "2024-06-06", category: "fitness" },
+  { _id: "p5",  userId: "u5", caption: "New charcoal sketch, took 6 hours",            tags: ["art","sketch","charcoal"],      likesCount: 430,  commentsCount: 2, createdAt: "2024-06-07", category: "art"     },
+  { _id: "p6",  userId: "u6", caption: "Understanding closures finally clicked",       tags: ["javascript","webdev"],          likesCount: 560,  commentsCount: 3, createdAt: "2024-06-08", category: "tech"    },
+  { _id: "p7",  userId: "u2", caption: "Road trip through Spiti valley",               tags: ["travel","spiti","roadtrip"],    likesCount: 1450, commentsCount: 0, createdAt: "2024-06-10", category: "travel"  },
+  { _id: "p8",  userId: "u8", caption: "5AM workout hits different",                   tags: ["fitness","motivation"],         likesCount: 780,  commentsCount: 2, createdAt: "2024-06-11", category: "fitness" },
+  { _id: "p9",  userId: "u4", caption: "Street food tour of Indore, thread",           tags: ["food","indore","streetfood"],   likesCount: 2100, commentsCount: 0, createdAt: "2024-06-12", category: "food"    },
+  { _id: "p10", userId: "u1", caption: "MongoDB aggregation is actually beautiful",    tags: ["mongodb","webdev","backend"],   likesCount: 670,  commentsCount: 3, createdAt: "2024-06-14", category: "tech"    },
+  { _id: "p11", userId: "u7", caption: "Backwaters of Kerala at dawn",                 tags: ["travel","kerala"],              likesCount: 950,  commentsCount: 0, createdAt: "2024-06-15", category: "travel"  },
+  { _id: "p12", userId: "u5", caption: "Digital art vs traditional, my take",          tags: ["art","digitalart"],             likesCount: 310,  commentsCount: 0, createdAt: "2024-06-16", category: "art"     }
+]
+</pre
+          >
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-label">comments collection — 15 documents</span>
+          </div>
+          <pre>
+[
+  { _id: "c1",  postId: "p1", userId: "u6", text: "This is so clean, great work!",   createdAt: "2024-06-01", likesCount: 12 },
+  { _id: "c2",  postId: "p1", userId: "u3", text: "What stack did you use?",         createdAt: "2024-06-02", likesCount: 4  },
+  { _id: "c3",  postId: "p1", userId: "u2", text: "Congrats on shipping it",         createdAt: "2024-06-02", likesCount: 8  },
+  { _id: "c4",  postId: "p2", userId: "u1", text: "Manali is on my list now",        createdAt: "2024-06-03", likesCount: 15 },
+  { _id: "c5",  postId: "p2", userId: "u4", text: "That sky though",                 createdAt: "2024-06-04", likesCount: 22 },
+  { _id: "c6",  postId: "p3", userId: "u1", text: "Ok now I'm hungry",               createdAt: "2024-06-05", likesCount: 9  },
+  { _id: "c7",  postId: "p3", userId: "u8", text: "Which place exactly?",            createdAt: "2024-06-05", likesCount: 6  },
+  { _id: "c8",  postId: "p3", userId: "u6", text: "Facts, best in the city",         createdAt: "2024-06-06", likesCount: 11 },
+  { _id: "c9",  postId: "p3", userId: "u3", text: "Adding to my list",               createdAt: "2024-06-06", likesCount: 3  },
+  { _id: "c10", postId: "p4", userId: "u8", text: "Respect the grind",               createdAt: "2024-06-06", likesCount: 18 },
+  { _id: "c11", postId: "p5", userId: "u1", text: "The shading is insane",           createdAt: "2024-06-07", likesCount: 25 },
+  { _id: "c12", postId: "p5", userId: "u7", text: "How long did this take?",         createdAt: "2024-06-08", likesCount: 5  },
+  { _id: "c13", postId: "p6", userId: "u1", text: "Closures took me a month lol",    createdAt: "2024-06-08", likesCount: 30 },
+  { _id: "c14", postId: "p6", userId: "u5", text: "Underrated concept, good post",   createdAt: "2024-06-09", likesCount: 14 },
+  { _id: "c15", postId: "p6", userId: "u8", text: "Bookmarking this",                createdAt: "2024-06-09", likesCount: 7  }
+]
+</pre
+          >
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-label">follows collection — 10 documents</span>
+          </div>
+          <pre>
+[
+  { _id: "f1",  followerId: "u1", followingId: "u2", createdAt: "2024-02-01" },
+  { _id: "f2",  followerId: "u1", followingId: "u4", createdAt: "2024-03-15" },
+  { _id: "f3",  followerId: "u3", followingId: "u8", createdAt: "2024-04-20" },
+  { _id: "f4",  followerId: "u5", followingId: "u2", createdAt: "2024-05-05" },
+  { _id: "f5",  followerId: "u6", followingId: "u1", createdAt: "2024-02-10" },
+  { _id: "f6",  followerId: "u7", followingId: "u2", createdAt: "2024-01-01" },
+  { _id: "f7",  followerId: "u7", followingId: "u4", createdAt: "2024-03-01" },
+  { _id: "f8",  followerId: "u8", followingId: "u4", createdAt: "2024-04-25" },
+  { _id: "f9",  followerId: "u2", followingId: "u4", createdAt: "2024-02-28" },
+  { _id: "f10", followerId: "u4", followingId: "u2", createdAt: "2024-03-05" }
+]
+</pre
+          >
+        </div>
+
+        <hr class="divider" />
+
+        <!-- ============ SECTION 01: THE PROBLEM ============ -->
+        <section class="section" id="problem">
+          <div class="section-header">
+            <div class="section-num-big">01</div>
+            <div class="section-title-block">
+              <div class="section-title">The Problem Aggregation Solves</div>
+              <div class="section-subtitle">
+                Why your find() + JS loops don't scale
+              </div>
+            </div>
+          </div>
+
+          <p>
+            Here's a real question on this dataset:
+            <strong
+              >which city has the most verified users, and what's the average
+              follower count of those verified users in that city?</strong
+            >
+          </p>
+
+          <p>
+            You know CRUD. So you solve it the only way you know — fetch
+            everything, loop in JavaScript, and hope the dataset stays small.
+          </p>
+
+          <h4>The Painful Way</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">JavaScript — client-side</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-comment">// Step 1: Fetch ALL 8 users from the database</span>
+const allUsers = await db.collection(<span class="c-str">'users'</span>).find({}).toArray();
+
+<span class="c-comment">// Step 2: Filter verified users in JS — 3 docs pulled for nothing</span>
+const verified = allUsers.filter(u =&gt; u.isVerified);
+<span class="c-comment">// → [u1, u2, u4, u6, u8] — 5 docs kept, 3 wasted bandwidth</span>
+
+<span class="c-comment">// Step 3: Group by city manually</span>
+const byCity = {};
+for (const u of verified) {
+  if (!byCity[u.city]) byCity[u.city] = [];
+  byCity[u.city].push(u);
+}
+<span class="c-comment">// → { Bhopal: [u1, u6], Indore: [u2, u4, u8] }</span>
+
+<span class="c-comment">// Step 4: Compute count + average per city</span>
+const results = Object.entries(byCity).map(([city, users]) =&gt; ({
+  city,
+  verifiedCount: users.length,
+  avgFollowers: users.reduce((sum, u) =&gt; sum + u.followersCount, 0) / users.length
+}));
+<span class="c-comment">// → [</span>
+<span class="c-comment">//   { city: "Bhopal", verifiedCount: 2, avgFollowers: 1650 },</span>
+<span class="c-comment">//   { city: "Indore", verifiedCount: 3, avgFollowers: 5566.67 }</span>
+<span class="c-comment">// ]</span>
+
+<span class="c-comment">// Step 5: Sort by count descending</span>
+results.sort((a, b) =&gt; b.verifiedCount - a.verifiedCount);
+
+<span class="c-comment">// Step 6: Grab the winner</span>
+console.log(results[0]);
+<span class="c-comment">// → { city: "Indore", verifiedCount: 3, avgFollowers: 5566.67 }</span>
+</pre>
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong
+                >Six steps. 20+ lines. Every document fetched over the
+                wire.</strong
+              >
+              If users grows to 10 million, you're pulling 10 million documents
+              to filter 3 million away. The database ships data you throw in the
+              trash.
+            </p>
+          </div>
+
+          <h4>The Aggregation Way</h4>
+          <p>
+            Same result. Four stages. The database does all the work — only the
+            final row crosses the network.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$match</span>:  { isVerified: <span class="c-val">true</span> } },
+  { <span class="c-key">$group</span>:  {
+    _id: <span class="c-str">"$city"</span>,
+    verifiedCount: { <span class="c-key">$sum</span>: <span class="c-val">1</span> },
+    avgFollowers:  { <span class="c-key">$avg</span>: <span class="c-str">"$followersCount"</span> }
+  }},
+  { <span class="c-key">$sort</span>:   { verifiedCount: <span class="c-val">-1</span> } },
+  { <span class="c-key">$limit</span>:  <span class="c-val">1</span> }
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output</span>
+            </div>
+            <pre>[
+  { _id: <span class="c-str">"Indore"</span>, verifiedCount: <span class="c-val">3</span>, avgFollowers: <span class="c-val">5566.666666666667</span> }
+]
+</pre>
+          </div>
+
+          <p>
+            One document returned. The filtering, grouping, averaging, sorting —
+            all happened inside MongoDB. The aggregation framework is a
+            <strong>pipeline</strong>: you feed it stages, documents flow
+            through each one, and what comes out the other end is your answer.
+          </p>
+        </section>
+
+        <!-- ============ SECTION 02: MENTAL MODEL ============ -->
+        <section class="section" id="mental-model">
+          <div class="section-header">
+            <div class="section-num-big">02</div>
+            <div class="section-title-block">
+              <div class="section-title">The Mental Model</div>
+              <div class="section-subtitle">
+                Pipeline = array of stages. Output of stage N = input of stage
+                N+1.
+              </div>
+            </div>
+          </div>
+
+          <div class="concept">
+            <div class="concept-label">Key Concept</div>
+            <p>
+              <strong>A pipeline</strong> is an array. Each element is a
+              <strong>stage</strong> — a single operation like filter, group, or
+              sort. Documents enter the first stage, get transformed, and the
+              entire output of that stage becomes the input to the next. If
+              stage 1 outputs 5 documents, stage 2 receives exactly 5 documents.
+              No more, no less — unless a stage itself changes the count (like
+              <code>$group</code> collapsing many into few, or
+              <code>$unwind</code> splitting one into many).
+            </p>
+          </div>
+
+          <div class="flow">
+            <div class="flow-step">
+              <div class="flow-line">
+                <div class="flow-dot"></div>
+                <div class="flow-connector"></div>
+              </div>
+              <div class="flow-content">
+                <div class="flow-title">12 posts enter the pipeline</div>
+                <div class="flow-detail">
+                  Full posts collection — all 12 documents flow in.
+                </div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-line">
+                <div class="flow-dot"></div>
+                <div class="flow-connector"></div>
+              </div>
+              <div class="flow-content">
+                <div class="flow-title">$match: { category: "tech" }</div>
+                <div class="flow-detail">
+                  8 documents dropped. 3 tech posts exit: p1, p6, p10.
+                </div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-line">
+                <div class="flow-dot"></div>
+                <div class="flow-connector"></div>
+              </div>
+              <div class="flow-content">
+                <div class="flow-title">$sort: { likesCount: -1 }</div>
+                <div class="flow-detail">
+                  Still 3 documents — just reordered: p10 (670), p6 (560), p1
+                  (340).
+                </div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-line">
+                <div class="flow-dot"></div>
+                <div class="flow-connector"></div>
+              </div>
+              <div class="flow-content">
+                <div class="flow-title">$limit: 1</div>
+                <div class="flow-detail">
+                  2 documents dropped. 1 exits: p10.
+                </div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-line">
+                <div class="flow-dot" style="background: var(--accent2)"></div>
+              </div>
+              <div class="flow-content">
+                <div class="flow-title">Result: 1 document</div>
+                <div class="flow-detail">
+                  Only this 1 document crosses the network to your app.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Order matters.</strong> <code>$match</code> before
+              <code>$group</code> means fewer documents to group.
+              <code>$limit</code> after <code>$sort</code> means you get the
+              true top N. Swap them and you get garbage. Think of it like a Unix
+              pipe — each stage feeds the next.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 03: $match ============ -->
+        <section class="section" id="match">
+          <div class="section-header">
+            <div class="section-num-big">03</div>
+            <div class="section-title-block">
+              <div class="section-title">$match</div>
+              <div class="section-subtitle">
+                Filter documents — the WHERE clause of aggregation
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>Without it:</strong> you pull every document from the
+            collection and discard the ones you don't need in JS. With 8 users
+            that's fine. With 8 million, your app crashes before the loop
+            finishes.
+          </p>
+
+          <p>
+            <strong>What it does:</strong> passes through only documents that
+            match your criteria. Identical syntax to <code>find()</code> query
+            operators. Put it <em>first</em> whenever possible — MongoDB can use
+            indexes on <code>$match</code>, and earlier filtering means every
+            subsequent stage processes fewer documents.
+          </p>
+
+          <h4>Example 1 — Verified users only</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$match</span>: { isVerified: <span class="c-val">true</span> } }
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — 5 documents</span>
+            </div>
+            <pre>
+[
+  { _id: "u1", name: "Aarav Sharma",  ... isVerified: true, followersCount: 1200 },
+  { _id: "u2", name: "Diya Patel",    ... isVerified: true, followersCount: 4500 },
+  { _id: "u4", name: "Ananya Rao",    ... isVerified: true, followersCount: 8900 },
+  { _id: "u6", name: "Ishita Verma",  ... isVerified: true, followersCount: 2100 },
+  { _id: "u8", name: "Myra Kapoor",   ... isVerified: true, followersCount: 3300 }
+]
+</pre
+            >
+          </div>
+
+          <h4>Example 2 — Food or tech posts with 800+ likes</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$match</span>: {
+    likesCount: { <span class="c-key">$gt</span>: <span class="c-val">800</span> },
+    category:   { <span class="c-key">$in</span>: [<span class="c-str">"tech"</span>, <span class="c-str">"food"</span>] }
+  }}
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — 2 documents</span>
+            </div>
+            <pre>
+[
+  { _id: "p3", userId: "u4", caption: "Best butter chicken in Indore, change my mind", likesCount: 1200, category: "food", ... },
+  { _id: "p9", userId: "u4", caption: "Street food tour of Indore, thread",            likesCount: 2100, category: "food", ... }
+]
+</pre
+            >
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong>Always put $match as early as possible.</strong> MongoDB
+              can use indexes to satisfy a $match at the start of a pipeline.
+              Once you run a $project or $group before $match, the optimizer
+              can't use indexes — it has to scan every document. This is the #1
+              performance mistake in aggregation.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 04: $group ============ -->
+        <section class="section" id="group">
+          <div class="section-header">
+            <div class="section-num-big">04</div>
+            <div class="section-title-block">
+              <div class="section-title">$group</div>
+              <div class="section-subtitle">
+                Collapse many documents into fewer — the GROUP BY of MongoDB
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>Without it:</strong> you fetch all posts, loop through them
+            in JS, maintain a dictionary keyed by category, and compute
+            sums/averages yourself. It works, but the database has to ship every
+            document to your app, and your JS is single-threaded.
+          </p>
+
+          <p>
+            <strong>What it does:</strong> groups input documents by a specified
+            key (<code>_id</code>) and applies accumulator operators to each
+            group. The output is one document per unique group value.
+          </p>
+
+          <h4>Example 1 — Count posts per category</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$group</span>: {
+    _id: <span class="c-str">"$category"</span>,
+    postCount: { <span class="c-key">$sum</span>: <span class="c-val">1</span> }
+  }}
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label"
+                >Output — 5 documents (one per category)</span
+              >
+            </div>
+            <pre>[
+  { _id: <span class="c-str">"tech"</span>,    postCount: <span class="c-val">3</span> },
+  { _id: <span class="c-str">"travel"</span>,  postCount: <span class="c-val">3</span> },
+  { _id: <span class="c-str">"food"</span>,    postCount: <span class="c-val">2</span> },
+  { _id: <span class="c-str">"fitness"</span>, postCount: <span class="c-val">2</span> },
+  { _id: <span class="c-str">"art"</span>,     postCount: <span class="c-val">2</span> }
+]
+</pre>
+          </div>
+
+          <h4>Example 2 — Total + average likes per category</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$group</span>: {
+    _id: <span class="c-str">"$category"</span>,
+    totalLikes: { <span class="c-key">$sum</span>: <span class="c-str">"$likesCount"</span> },
+    avgLikes:   { <span class="c-key">$avg</span>: <span class="c-str">"$likesCount"</span> },
+    postCount:  { <span class="c-key">$sum</span>: <span class="c-val">1</span> }
+  }},
+  { <span class="c-key">$sort</span>: { totalLikes: <span class="c-val">-1</span> } }
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label"
+                >Output — sorted by totalLikes descending</span
+              >
+            </div>
+            <pre>[
+  { _id: <span class="c-str">"food"</span>,    totalLikes: <span class="c-val">3300</span>, avgLikes: <span class="c-val">1650</span>,    postCount: <span class="c-val">2</span> },
+  { _id: <span class="c-str">"travel"</span>,  totalLikes: <span class="c-val">3290</span>, avgLikes: <span class="c-val">1096.67</span>, postCount: <span class="c-val">3</span> },
+  { _id: <span class="c-str">"tech"</span>,    totalLikes: <span class="c-val">1570</span>, avgLikes: <span class="c-val">523.33</span>,  postCount: <span class="c-val">3</span> },
+  { _id: <span class="c-str">"fitness"</span>, totalLikes: <span class="c-val">990</span>,  avgLikes: <span class="c-val">495</span>,     postCount: <span class="c-val">2</span> },
+  { _id: <span class="c-str">"art"</span>,     totalLikes: <span class="c-val">740</span>,  avgLikes: <span class="c-val">370</span>,     postCount: <span class="c-val">2</span> }
+]
+</pre>
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong>$group does not preserve document order.</strong> The
+              output order is arbitrary unless you add a
+              <code>$sort</code> after. Also, grouping by
+              <code>null</code> (<code>_id: null</code>) collapses all documents
+              into a single group — useful for counting an entire collection.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 05: $project ============ -->
+        <section class="section" id="project">
+          <div class="section-header">
+            <div class="section-num-big">05</div>
+            <div class="section-title-block">
+              <div class="section-title">$project</div>
+              <div class="section-subtitle">
+                Reshape documents — pick, drop, and compute fields
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>Without it:</strong> every document ships over the wire with
+            all 9 fields, even if your frontend only needs 2. You're paying
+            bandwidth and serialization costs for data you throw away.
+          </p>
+
+          <p>
+            <strong>What it does:</strong> passes through documents with only
+            the fields you specify. Use <code>1</code> to include,
+            <code>0</code> to exclude. You can also compute new fields —
+            expressions make <code>$project</code> the stage where data gets
+            reshaped, not just trimmed.
+          </p>
+
+          <h4>Example 1 — Pick only name and username</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$project</span>: { _id: <span class="c-val">0</span>, name: <span class="c-val">1</span>, username: <span class="c-val">1</span> } }
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label"
+                >Output — 8 documents, 2 fields each</span
+              >
+            </div>
+            <pre>
+[
+  { name: "Aarav Sharma",  username: "aarav_codes"  },
+  { name: "Diya Patel",    username: "diya.travels" },
+  { name: "Kabir Singh",   username: "kabir_fit"    },
+  { name: "Ananya Rao",    username: "ananya.eats"  },
+  { name: "Vihaan Gupta",  username: "vihaan_art"   },
+  { name: "Ishita Verma",  username: "ishita.codes" },
+  { name: "Reyansh Joshi", username: "rey_travels"  },
+  { name: "Myra Kapoor",   username: "myra.fitlife" }
+]
+</pre
+            >
+          </div>
+
+          <h4>Example 2 — Compute engagement (likes + comments)</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">1</span>,
+    caption: <span class="c-val">1</span>,
+    engagement: { <span class="c-key">$add</span>: [<span class="c-str">"$likesCount"</span>, <span class="c-str">"$commentsCount"</span>] }
+  }}
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — 12 documents</span>
+            </div>
+            <pre>[
+  { _id: "p1",  caption: "Deployed my first MERN app today!",        engagement: <span class="c-val">343</span>  },
+  { _id: "p2",  caption: "Sunset in Manali, worth every step",       engagement: <span class="c-val">892</span>  },
+  { _id: "p3",  caption: "Best butter chicken in Indore...",         engagement: <span class="c-val">1204</span> },
+  { _id: "p4",  caption: "Leg day never lies",                       engagement: <span class="c-val">211</span>  },
+  { _id: "p5",  caption: "New charcoal sketch, took 6 hours",        engagement: <span class="c-val">432</span>  },
+  { _id: "p6",  caption: "Understanding closures finally clicked",   engagement: <span class="c-val">563</span>  },
+  { _id: "p7",  caption: "Road trip through Spiti valley",           engagement: <span class="c-val">1450</span> },
+  { _id: "p8",  caption: "5AM workout hits different",               engagement: <span class="c-val">782</span>  },
+  { _id: "p9",  caption: "Street food tour of Indore, thread",       engagement: <span class="c-val">2100</span> },
+  { _id: "p10", caption: "MongoDB aggregation is actually beautiful", engagement: <span class="c-val">673</span> },
+  { _id: "p11", caption: "Backwaters of Kerala at dawn",            engagement: <span class="c-val">950</span>  },
+  { _id: "p12", caption: "Digital art vs traditional, my take",     engagement: <span class="c-val">310</span>  }
+]
+</pre>
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong>You cannot mix 1 and 0 freely.</strong> Once you include a
+              field with <code>1</code>, all other fields are excluded by
+              default — you can only use <code>0</code> to explicitly remove
+              <code>_id</code>. The exception: if you set only exclusions (all
+              <code>0</code>), the rest come along. This is the most common
+              $project mistake.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 06: $sort ============ -->
+        <section class="section" id="sort">
+          <div class="section-header">
+            <div class="section-num-big">06</div>
+            <div class="section-title-block">
+              <div class="section-title">$sort</div>
+              <div class="section-subtitle">
+                Order documents by one or more fields
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>Without it:</strong> you fetch all documents, then call
+            <code>.sort()</code> in JS on the full array. Fine for 12 posts,
+            catastrophic for 12 million. The database has an internal sort
+            that's dramatically faster.
+          </p>
+
+          <p>
+            <strong>What it does:</strong> reorders all incoming documents. Use
+            <code>1</code> for ascending, <code>-1</code> for descending.
+            Multiple fields are sorted lexicographically — first field first,
+            ties broken by second, etc.
+          </p>
+
+          <h4>Example 1 — Posts by likes descending</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$sort</span>: { likesCount: <span class="c-val">-1</span> } }
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — top 5 shown</span>
+            </div>
+            <pre>[
+  { _id: "p9",  likesCount: <span class="c-val">2100</span>, caption: "Street food tour of Indore, thread", ... },
+  { _id: "p7",  likesCount: <span class="c-val">1450</span>, caption: "Road trip through Spiti valley",      ... },
+  { _id: "p3",  likesCount: <span class="c-val">1200</span>, caption: "Best butter chicken in Indore...",    ... },
+  { _id: "p11", likesCount: <span class="c-val">950</span>,  caption: "Backwaters of Kerala at dawn",       ... },
+  { _id: "p2",  likesCount: <span class="c-val">890</span>,  caption: "Sunset in Manali, worth every step", ... }
+]
+</pre>
+          </div>
+
+          <h4>Example 2 — Users by followers ascending, then age descending</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$sort</span>: { followersCount: <span class="c-val">1</span>, age: <span class="c-val">-1</span> } },
+  { <span class="c-key">$project</span>: { name: <span class="c-val">1</span>, followersCount: <span class="c-val">1</span>, age: <span class="c-val">1</span>, _id: <span class="c-val">0</span> } }
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — 8 documents</span>
+            </div>
+            <pre>[
+  { name: "Vihaan Gupta",  followersCount: <span class="c-val">150</span>,  age: <span class="c-val">21</span> },
+  { name: "Kabir Singh",   followersCount: <span class="c-val">320</span>,  age: <span class="c-val">28</span> },
+  { name: "Reyansh Joshi", followersCount: <span class="c-val">600</span>,  age: <span class="c-val">26</span> },
+  { name: "Aarav Sharma",  followersCount: <span class="c-val">1200</span>, age: <span class="c-val">22</span> },
+  { name: "Ishita Verma",  followersCount: <span class="c-val">2100</span>, age: <span class="c-val">23</span> },
+  { name: "Myra Kapoor",   followersCount: <span class="c-val">3300</span>, age: <span class="c-val">27</span> },
+  { name: "Diya Patel",    followersCount: <span class="c-val">4500</span>, age: <span class="c-val">25</span> },
+  { name: "Ananya Rao",    followersCount: <span class="c-val">8900</span>, age: <span class="c-val">24</span> }
+]
+</pre>
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong>$sort has a 100MB memory limit</strong> by default. If the
+              pipeline is sorting more data than fits in memory, MongoDB throws
+              an error. Add <code>{ allowDiskUse: true }</code> as a second
+              argument to <code>aggregate()</code> to let it spill to disk.
+              Better: always <code>$match</code> before <code>$sort</code> to
+              reduce the input size.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 07: $limit ============ -->
+        <section class="section" id="limit">
+          <div class="section-header">
+            <div class="section-num-big">07</div>
+            <div class="section-title-block">
+              <div class="section-title">$limit</div>
+              <div class="section-subtitle">
+                Pass through only the first N documents
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>Without it:</strong> you fetch all 12 posts to display a
+            "Top 3" leaderboard. 9 documents crossed the network for nothing.
+          </p>
+
+          <p>
+            <strong>What it does:</strong> passes through at most N documents,
+            drops the rest. Pair with <code>$sort</code> to get "top N" — but
+            <code>$sort</code> must come <em>before</em> <code>$limit</code>, or
+            you're limiting random documents then sorting what's left.
+          </p>
+
+          <h4>Example — Top 3 most liked posts</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$sort</span>:  { likesCount: <span class="c-val">-1</span> } },
+  { <span class="c-key">$limit</span>: <span class="c-val">3</span> },
+  { <span class="c-key">$project</span>: { caption: <span class="c-val">1</span>, likesCount: <span class="c-val">1</span>, _id: <span class="c-val">0</span> } }
+])
+</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — 3 documents</span>
+            </div>
+            <pre>[
+  { caption: "Street food tour of Indore, thread", likesCount: <span class="c-val">2100</span> },
+  { caption: "Road trip through Spiti valley",      likesCount: <span class="c-val">1450</span> },
+  { caption: "Best butter chicken in Indore...",    likesCount: <span class="c-val">1200</span> }
+]
+</pre>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 08: $skip ============ -->
+        <section class="section" id="skip">
+          <div class="section-header">
+            <div class="section-num-big">08</div>
+            <div class="section-title-block">
+              <div class="section-title">$skip</div>
+              <div class="section-subtitle">
+                Discard the first N documents, pass through the rest
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> removes the first N documents from
+            the current pipeline result. It is commonly paired with
+            <code>$sort</code> and <code>$limit</code> for pagination.
+          </p>
+          <h4>Example — Page 2, 3 posts per page</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$sort</span>: { likesCount: <span class="c-val">-1</span>, _id: <span class="c-val">1</span> } },
+  { <span class="c-key">$skip</span>: <span class="c-val">3</span> },
+  { <span class="c-key">$limit</span>: <span class="c-val">3</span> },
+  { <span class="c-key">$project</span>: { caption: <span class="c-val">1</span>, likesCount: <span class="c-val">1</span>, _id: <span class="c-val">0</span> } }
+])</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — page 2</span>
+            </div>
+            <pre>[
+  { caption: "Best butter chicken in Indore...", likesCount: <span class="c-val">1200</span> },
+  { caption: "Backwaters of Kerala at dawn",    likesCount: <span class="c-val">950</span> },
+  { caption: "Sunset in Manali, worth every step", likesCount: <span class="c-val">890</span> }
+]</pre>
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong>Pagination formula:</strong>
+              <code>skip = (page - 1) * pageSize</code>. For large offsets,
+              cursor/range pagination is often more scalable than repeatedly
+              skipping thousands of documents.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 09: $unwind ============ -->
+        <section class="section" id="unwind">
+          <div class="section-header">
+            <div class="section-num-big">09</div>
+            <div class="section-title-block">
+              <div class="section-title">$unwind</div>
+              <div class="section-subtitle">
+                Turn one array field into multiple documents
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> if one document contains an array,
+            <code>$unwind</code> creates one output document for every array
+            element.
+          </p>
+          <h4>Example — One post with three tags</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$match</span>: { _id: <span class="c-str">"p1"</span> } },
+  { <span class="c-key">$unwind</span>: <span class="c-str">"$tags"</span> },
+  { <span class="c-key">$project</span>: { _id: <span class="c-val">0</span>, caption: <span class="c-val">1</span>, tag: <span class="c-str">"$tags"</span> } }
+])</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — 3 documents</span>
+            </div>
+            <pre>
+[
+  { caption: "Deployed my first MERN app today!", tag: "mern" },
+  { caption: "Deployed my first MERN app today!", tag: "webdev" },
+  { caption: "Deployed my first MERN app today!", tag: "nodejs" }
+]</pre
+            >
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Important:</strong> <code>$unwind</code> can increase the
+              document count dramatically. Use
+              <code>preserveNullAndEmptyArrays: true</code> when documents
+              without an array value must remain in the result.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 10: $lookup ============ -->
+        <section class="section" id="lookup">
+          <div class="section-header">
+            <div class="section-num-big">10</div>
+            <div class="section-title-block">
+              <div class="section-title">$lookup</div>
+              <div class="section-subtitle">
+                Join documents from another collection
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> performs a left outer join. The
+            matching documents from another collection are placed into an array
+            field.
+          </p>
+          <h4>Example — Attach the author to every post</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$lookup</span>: {
+    from: <span class="c-str">"users"</span>,
+    localField: <span class="c-str">"userId"</span>,
+    foreignField: <span class="c-str">"_id"</span>,
+    as: <span class="c-str">"author"</span>
+  }},
+  { <span class="c-key">$unwind</span>: <span class="c-str">"$author"</span> },
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">0</span>,
+    caption: <span class="c-val">1</span>,
+    authorName: <span class="c-str">"$author.name"</span>,
+    username: <span class="c-str">"$author.username"</span>
+  }}
+])</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output — first matching document</span>
+            </div>
+            <pre>
+{
+  caption: "Deployed my first MERN app today!",
+  authorName: "Aarav Sharma",
+  username: "aarav_codes"
+}</pre
+            >
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong>Think:</strong> <code>$lookup</code> is the aggregation
+              equivalent of saying “find the related document and attach it
+              here.” Index the foreign field when appropriate, and keep the
+              joined dataset under control.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 11: $graphLookup ============ -->
+        <section class="section" id="graphlookup">
+          <div class="section-header">
+            <div class="section-num-big">11</div>
+            <div class="section-title-block">
+              <div class="section-title">$graphLookup</div>
+              <div class="section-subtitle">
+                Follow recursive relationships such as a hierarchy
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> performs a recursive search through a
+            collection. It is useful for parent/child structures such as
+            employees, categories, or referral trees.
+          </p>
+          <h4>Example pattern — Follow a manager hierarchy</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.employees.aggregate</span>([
+  { <span class="c-key">$match</span>: { _id: <span class="c-str">"e1"</span> } },
+  { <span class="c-key">$graphLookup</span>: {
+    from: <span class="c-str">"employees"</span>,
+    startWith: <span class="c-str">"$managerId"</span>,
+    connectFromField: <span class="c-str">"managerId"</span>,
+    connectToField: <span class="c-str">"_id"</span>,
+    as: <span class="c-str">"managementChain"</span>
+  }}
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Key idea:</strong> <code>$graphLookup</code> is for
+              recursive traversal, not a normal one-level join. The options
+              <code>startWith</code>, <code>connectFromField</code>, and
+              <code>connectToField</code> define how the traversal moves.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 12: $addFields / $set ============ -->
+        <section class="section" id="addfields">
+          <div class="section-header">
+            <div class="section-num-big">12</div>
+            <div class="section-title-block">
+              <div class="section-title">$addFields / $set</div>
+              <div class="section-subtitle">
+                Add or overwrite fields without removing the existing document
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> calculates new fields while keeping
+            the other fields. <code>$set</code> is an alias for
+            <code>$addFields</code>.
+          </p>
+          <h4>Example — Calculate engagement</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$set</span>: {
+    engagement: {
+      <span class="c-key">$add</span>: [<span class="c-str">"$likesCount"</span>, <span class="c-str">"$commentsCount"</span>]
+    }
+  }}
+])</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Example result</span>
+            </div>
+            <pre>{
+  _id: "p1",
+  likesCount: <span class="c-val">340</span>,
+  commentsCount: <span class="c-val">3</span>,
+  engagement: <span class="c-val">343</span>
+}</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>$set vs $project:</strong> use <code>$set</code> when you
+              want to keep the existing document and add/overwrite fields. Use
+              <code>$project</code> when you intentionally reshape which fields
+              leave the stage.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 13: $unset ============ -->
+        <section class="section" id="unset">
+          <div class="section-header">
+            <div class="section-num-big">13</div>
+            <div class="section-title-block">
+              <div class="section-title">$unset</div>
+              <div class="section-subtitle">
+                Remove fields from pipeline documents
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> removes one or more fields from each
+            document. It is an alias-style convenience for excluding fields from
+            the pipeline output.
+          </p>
+          <h4>Example — Remove email before sending user data</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$unset</span>: [<span class="c-str">"email"</span>, <span class="c-str">"followersCount"</span>] }
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>API use:</strong> <code>$unset</code> is useful near the
+              end of a pipeline when sensitive or unnecessary fields should not
+              reach the application layer.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 14: $replaceRoot ============ -->
+        <section class="section" id="replaceroot">
+          <div class="section-header">
+            <div class="section-num-big">14</div>
+            <div class="section-title-block">
+              <div class="section-title">$replaceRoot</div>
+              <div class="section-subtitle">
+                Replace the whole document with an embedded document
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> promotes an embedded object to become
+            the new root document.
+          </p>
+          <h4>Example — Promote the joined author</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$lookup</span>: {
+    from: <span class="c-str">"users"</span>,
+    localField: <span class="c-str">"userId"</span>,
+    foreignField: <span class="c-str">"_id"</span>,
+    as: <span class="c-str">"author"</span>
+  }},
+  { <span class="c-key">$unwind</span>: <span class="c-str">"$author"</span> },
+  { <span class="c-key">$replaceRoot</span>: { newRoot: <span class="c-str">"$author"</span> } }
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Remember:</strong> replacing the root discards the old
+              top-level shape unless you deliberately merge fields first. For
+              many APIs, <code>$project</code> is safer when you only need a few
+              fields.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 15: $out ============ -->
+        <section class="section" id="out">
+          <div class="section-header">
+            <div class="section-num-big">15</div>
+            <div class="section-title-block">
+              <div class="section-title">$out</div>
+              <div class="section-subtitle">
+                Write the pipeline result into a collection
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> sends the final aggregation result to
+            a collection instead of returning it to the application in the
+            normal way.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$group</span>: {
+    _id: <span class="c-str">"$category"</span>,
+    totalLikes: { <span class="c-key">$sum</span>: <span class="c-str">"$likesCount"</span> }
+  }},
+  { <span class="c-key">$out</span>: <span class="c-str">"categoryStats"</span> }
+])</pre>
+          </div>
+
+          <div class="warn">
+            <div class="note-icon">⚠️</div>
+            <p>
+              <strong>Use carefully:</strong> <code>$out</code> is a write
+              stage. It is useful for materializing reports or derived
+              collections, but it should not be casually placed in a request
+              pipeline.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 16: $merge ============ -->
+        <section class="section" id="merge">
+          <div class="section-header">
+            <div class="section-num-big">16</div>
+            <div class="section-title-block">
+              <div class="section-title">$merge</div>
+              <div class="section-subtitle">
+                Write aggregation results into a collection with controlled
+                merge behavior
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> writes results to a target collection
+            and lets you define what happens when a matching document already
+            exists.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$group</span>: {
+    _id: <span class="c-str">"$category"</span>,
+    totalLikes: { <span class="c-key">$sum</span>: <span class="c-str">"$likesCount"</span> },
+    postCount: { <span class="c-key">$sum</span>: <span class="c-val">1</span> }
+  }},
+  { <span class="c-key">$merge</span>: {
+    into: <span class="c-str">"categoryStats"</span>,
+    on: <span class="c-str">"_id"</span>,
+    whenMatched: <span class="c-str">"replace"</span>,
+    whenNotMatched: <span class="c-str">"insert"</span>
+  }}
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>$out vs $merge:</strong> both write results.
+              <code>$merge</code> gives finer control over existing documents
+              and is useful for incremental or repeatable materialization.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 17: $count ============ -->
+        <section class="section" id="count">
+          <div class="section-header">
+            <div class="section-num-big">17</div>
+            <div class="section-title-block">
+              <div class="section-title">$count</div>
+              <div class="section-subtitle">
+                Count the documents reaching this point
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> returns one document containing the
+            number of documents that entered the stage.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$match</span>: { category: <span class="c-str">"tech"</span> } },
+  { <span class="c-key">$count</span>: <span class="c-str">"totalTechPosts"</span> }
+])</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">Output</span>
+            </div>
+            <pre>[
+  { totalTechPosts: <span class="c-val">3</span> }
+]</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Important:</strong> <code>$count</code> counts documents
+              after all previous stages. So put <code>$match</code>,
+              <code>$unwind</code>, or other filtering stages before it when the
+              count must reflect those transformations.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 18: $sample ============ -->
+        <section class="section" id="sample">
+          <div class="section-header">
+            <div class="section-num-big">18</div>
+            <div class="section-title-block">
+              <div class="section-title">$sample</div>
+              <div class="section-subtitle">
+                Pick random documents from the pipeline
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> randomly selects a specified number
+            of documents.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$sample</span>: { size: <span class="c-val">3</span> } },
+  { <span class="c-key">$project</span>: { caption: <span class="c-val">1</span>, category: <span class="c-val">1</span>, _id: <span class="c-val">0</span> } }
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Use cases:</strong> random recommendations, demo data,
+              experimentation, or sampling a large collection. The exact output
+              changes because the selection is random.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 19: $facet ============ -->
+        <section class="section" id="facet">
+          <div class="section-header">
+            <div class="section-num-big">19</div>
+            <div class="section-title-block">
+              <div class="section-title">$facet</div>
+              <div class="section-subtitle">
+                Run multiple independent pipelines over the same input
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> runs multiple aggregation pipelines
+            in parallel on the same input documents and returns their results in
+            separate arrays.
+          </p>
+          <h4>Example — Dashboard in one query</h4>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$facet</span>: {
+    topPosts: [
+      { <span class="c-key">$sort</span>: { likesCount: <span class="c-val">-1</span> } },
+      { <span class="c-key">$limit</span>: <span class="c-val">3</span> },
+      { <span class="c-key">$project</span>: { caption: <span class="c-val">1</span>, likesCount: <span class="c-val">1</span>, _id: <span class="c-val">0</span> } }
+    ],
+    categoryCounts: [
+      { <span class="c-key">$group</span>: { _id: <span class="c-str">"$category"</span>, count: { <span class="c-key">$sum</span>: <span class="c-val">1</span> } } }
+    ]
+  }}
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Mental model:</strong> one input stream enters
+              <code>$facet</code>; several independent branches consume it; one
+              document comes out containing the branch results.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 20: $bucket ============ -->
+        <section class="section" id="bucket">
+          <div class="section-header">
+            <div class="section-num-big">20</div>
+            <div class="section-title-block">
+              <div class="section-title">$bucket</div>
+              <div class="section-subtitle">
+                Group numeric values into explicit ranges
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> groups documents into numeric ranges
+            defined by your boundaries.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$bucket</span>: {
+    groupBy: <span class="c-str">"$age"</span>,
+    boundaries: [<span class="c-val">20</span>, <span class="c-val">24</span>, <span class="c-val">28</span>, <span class="c-val">32</span>],
+    default: <span class="c-str">"other"</span>,
+    output: {
+      count: { <span class="c-key">$sum</span>: <span class="c-val">1</span> },
+      avgFollowers: { <span class="c-key">$avg</span>: <span class="c-str">"$followersCount"</span> }
+    }
+  }}
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Boundary rule:</strong> the lower boundary is inclusive
+              and the upper boundary is exclusive for each bucket. Always
+              provide a <code>default</code> bucket when values may fall outside
+              your boundaries.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 21: $bucketAuto ============ -->
+        <section class="section" id="bucketauto">
+          <div class="section-header">
+            <div class="section-num-big">21</div>
+            <div class="section-title-block">
+              <div class="section-title">$bucketAuto</div>
+              <div class="section-subtitle">
+                Let MongoDB calculate roughly even-sized numeric buckets
+              </div>
+            </div>
+          </div>
+
+          <p>
+            <strong>What it does:</strong> automatically chooses bucket
+            boundaries for a requested number of buckets.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$bucketAuto</span>: {
+    groupBy: <span class="c-str">"$followersCount"</span>,
+    buckets: <span class="c-val">4</span>,
+    output: {
+      count: { <span class="c-key">$sum</span>: <span class="c-val">1</span> },
+      avgAge: { <span class="c-key">$avg</span>: <span class="c-str">"$age"</span> }
+    }
+  }}
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>$bucket vs $bucketAuto:</strong> choose
+              <code>$bucket</code> when your ranges have business meaning;
+              choose <code>$bucketAuto</code> when you want MongoDB to
+              distribute values into approximately even buckets.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 22: Accumulators ============ -->
+        <section class="section" id="acc-operators">
+          <div class="section-header">
+            <div class="section-num-big">22</div>
+            <div class="section-title-block">
+              <div class="section-title">Accumulators</div>
+              <div class="section-subtitle">
+                Calculate values inside $group and other accumulation stages
+              </div>
+            </div>
+          </div>
+
+          <p>
+            Accumulators combine values from multiple input documents. The most
+            important ones for backend work are <code>$sum</code>,
+            <code>$avg</code>, <code>$min</code>, <code>$max</code>,
+            <code>$first</code>, <code>$last</code>, and <code>$push</code>.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$group</span>: {
+    _id: <span class="c-str">"$category"</span>,
+    totalLikes: { <span class="c-key">$sum</span>: <span class="c-str">"$likesCount"</span> },
+    avgLikes: { <span class="c-key">$avg</span>: <span class="c-str">"$likesCount"</span> },
+    minLikes: { <span class="c-key">$min</span>: <span class="c-str">"$likesCount"</span> },
+    maxLikes: { <span class="c-key">$max</span>: <span class="c-str">"$likesCount"</span> },
+    captions: { <span class="c-key">$push</span>: <span class="c-str">"$caption"</span> }
+  }}
+])</pre>
+          </div>
+
+          <table class="flag-table">
+            <tr>
+              <th>Accumulator</th>
+              <th>Meaning</th>
+              <th>Simple idea</th>
+            </tr>
+            <tr>
+              <td class="f-name">$sum</td>
+              <td class="f-desc">Adds values</td>
+              <td class="f-why">total likes / count with 1</td>
+            </tr>
+            <tr>
+              <td class="f-name">$avg</td>
+              <td class="f-desc">Average</td>
+              <td class="f-why">average price, likes, age</td>
+            </tr>
+            <tr>
+              <td class="f-name">$min / $max</td>
+              <td class="f-desc">Smallest / largest</td>
+              <td class="f-why">lowest and highest value</td>
+            </tr>
+            <tr>
+              <td class="f-name">$push</td>
+              <td class="f-desc">Builds an array</td>
+              <td class="f-why">collect values from each group</td>
+            </tr>
+            <tr>
+              <td class="f-name">$addToSet</td>
+              <td class="f-desc">Builds a unique array</td>
+              <td class="f-why">remove duplicate values</td>
+            </tr>
+          </table>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Interview tip:</strong> <code>{ $sum: 1 }</code> means
+              “add one for every document”, so it is a common way to count
+              documents inside <code>$group</code>.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 23: Arithmetic Operators ============ -->
+        <section class="section" id="arith-operators">
+          <div class="section-header">
+            <div class="section-num-big">23</div>
+            <div class="section-title-block">
+              <div class="section-title">Arithmetic Operators</div>
+              <div class="section-subtitle">
+                Perform calculations inside pipeline expressions
+              </div>
+            </div>
+          </div>
+
+          <p>
+            Arithmetic expressions are used to calculate derived values without
+            pulling the documents into JavaScript.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">0</span>,
+    caption: <span class="c-val">1</span>,
+    engagement: { <span class="c-key">$add</span>: [<span class="c-str">"$likesCount"</span>, <span class="c-str">"$commentsCount"</span>] },
+    doubleLikes: { <span class="c-key">$multiply</span>: [<span class="c-str">"$likesCount"</span>, <span class="c-val">2</span>] }
+  }}
+])</pre>
+          </div>
+
+          <table class="flag-table">
+            <tr>
+              <th>Operator</th>
+              <th>Use</th>
+            </tr>
+            <tr>
+              <td class="f-name">$add</td>
+              <td class="f-desc">Add numbers</td>
+            </tr>
+            <tr>
+              <td class="f-name">$subtract</td>
+              <td class="f-desc">Subtract one value from another</td>
+            </tr>
+            <tr>
+              <td class="f-name">$multiply</td>
+              <td class="f-desc">Multiply values</td>
+            </tr>
+            <tr>
+              <td class="f-name">$divide</td>
+              <td class="f-desc">Divide values</td>
+            </tr>
+            <tr>
+              <td class="f-name">$mod</td>
+              <td class="f-desc">Remainder</td>
+            </tr>
+            <tr>
+              <td class="f-name">$round</td>
+              <td class="f-desc">Round a number</td>
+            </tr>
+          </table>
+        </section>
+
+        <!-- ============ SECTION 24: Comparison Operators ============ -->
+        <section class="section" id="comp-operators">
+          <div class="section-header">
+            <div class="section-num-big">24</div>
+            <div class="section-title-block">
+              <div class="section-title">Comparison Operators</div>
+              <div class="section-subtitle">
+                Compare fields and values inside expressions
+              </div>
+            </div>
+          </div>
+
+          <p>
+            Comparison operators return boolean results and are commonly used
+            inside <code>$expr</code>, <code>$project</code>, <code>$set</code>,
+            and conditional expressions.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$project</span>: {
+    name: <span class="c-val">1</span>,
+    _id: <span class="c-val">0</span>,
+    isPopular: { <span class="c-key">$gte</span>: [<span class="c-str">"$followersCount"</span>, <span class="c-val">2000</span>] }
+  }}
+])</pre>
+          </div>
+
+          <table class="flag-table">
+            <tr>
+              <th>Operator</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td class="f-name">$eq</td>
+              <td class="f-desc">equal</td>
+            </tr>
+            <tr>
+              <td class="f-name">$ne</td>
+              <td class="f-desc">not equal</td>
+            </tr>
+            <tr>
+              <td class="f-name">$gt / $gte</td>
+              <td class="f-desc">greater than / greater than or equal</td>
+            </tr>
+            <tr>
+              <td class="f-name">$lt / $lte</td>
+              <td class="f-desc">less than / less than or equal</td>
+            </tr>
+          </table>
+        </section>
+
+        <!-- ============ SECTION 25: Logical Operators ============ -->
+        <section class="section" id="logic-operators">
+          <div class="section-header">
+            <div class="section-num-big">25</div>
+            <div class="section-title-block">
+              <div class="section-title">Logical Operators</div>
+              <div class="section-subtitle">Combine boolean conditions</div>
+            </div>
+          </div>
+
+          <p>Logical operators let you combine multiple boolean expressions.</p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$match</span>: {
+    <span class="c-key">$or</span>: [
+      { city: <span class="c-str">"Bhopal"</span> },
+      { city: <span class="c-str">"Indore"</span> }
+    ],
+    isVerified: <span class="c-val">true</span>
+  }}
+])</pre>
+          </div>
+
+          <table class="flag-table">
+            <tr>
+              <th>Operator</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td class="f-name">$and</td>
+              <td class="f-desc">all conditions must be true</td>
+            </tr>
+            <tr>
+              <td class="f-name">$or</td>
+              <td class="f-desc">at least one condition is true</td>
+            </tr>
+            <tr>
+              <td class="f-name">$not</td>
+              <td class="f-desc">negates a condition</td>
+            </tr>
+            <tr>
+              <td class="f-name">$nor</td>
+              <td class="f-desc">none of the conditions are true</td>
+            </tr>
+          </table>
+        </section>
+
+        <!-- ============ SECTION 26: String Operators ============ -->
+        <section class="section" id="string-operators">
+          <div class="section-header">
+            <div class="section-num-big">26</div>
+            <div class="section-title-block">
+              <div class="section-title">String Operators</div>
+              <div class="section-subtitle">
+                Transform and inspect text inside the pipeline
+              </div>
+            </div>
+          </div>
+
+          <p>
+            String operators are useful for search normalization, display
+            fields, labels, and computed API responses.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">0</span>,
+    name: <span class="c-val">1</span>,
+    usernameLower: { <span class="c-key">$toLower</span>: <span class="c-str">"$username"</span> },
+    nameLength: { <span class="c-key">$strLenCP</span>: <span class="c-str">"$name"</span> }
+  }}
+])</pre>
+          </div>
+
+          <table class="flag-table">
+            <tr>
+              <th>Operator</th>
+              <th>Use</th>
+            </tr>
+            <tr>
+              <td class="f-name">$concat</td>
+              <td class="f-desc">join strings</td>
+            </tr>
+            <tr>
+              <td class="f-name">$toLower / $toUpper</td>
+              <td class="f-desc">change case</td>
+            </tr>
+            <tr>
+              <td class="f-name">$substrCP</td>
+              <td class="f-desc">take part of a string</td>
+            </tr>
+            <tr>
+              <td class="f-name">$strLenCP</td>
+              <td class="f-desc">count Unicode code points</td>
+            </tr>
+            <tr>
+              <td class="f-name">$trim</td>
+              <td class="f-desc">remove surrounding characters/whitespace</td>
+            </tr>
+          </table>
+        </section>
+
+        <!-- ============ SECTION 27: Array Operators ============ -->
+        <section class="section" id="array-operators">
+          <div class="section-header">
+            <div class="section-num-big">27</div>
+            <div class="section-title-block">
+              <div class="section-title">Array Operators</div>
+              <div class="section-subtitle">
+                Inspect, transform, and filter array fields
+              </div>
+            </div>
+          </div>
+
+          <p>
+            Array operators are especially important when your MongoDB documents
+            contain tags, sizes, cart items, comments, or other embedded arrays.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">0</span>,
+    caption: <span class="c-val">1</span>,
+    tagCount: { <span class="c-key">$size</span>: <span class="c-str">"$tags"</span> },
+    firstTag: { <span class="c-key">$arrayElemAt</span>: [<span class="c-str">"$tags"</span>, <span class="c-val">0</span>] }
+  }}
+])</pre>
+          </div>
+
+          <table class="flag-table">
+            <tr>
+              <th>Operator</th>
+              <th>Use</th>
+            </tr>
+            <tr>
+              <td class="f-name">$size</td>
+              <td class="f-desc">array length</td>
+            </tr>
+            <tr>
+              <td class="f-name">$arrayElemAt</td>
+              <td class="f-desc">read an element by index</td>
+            </tr>
+            <tr>
+              <td class="f-name">$in</td>
+              <td class="f-desc">check whether a value exists in an array</td>
+            </tr>
+            <tr>
+              <td class="f-name">$filter</td>
+              <td class="f-desc">keep only matching array elements</td>
+            </tr>
+            <tr>
+              <td class="f-name">$map</td>
+              <td class="f-desc">transform every array element</td>
+            </tr>
+          </table>
+        </section>
+
+        <!-- ============ SECTION 28: Date Operators ============ -->
+        <section class="section" id="date-operators">
+          <div class="section-header">
+            <div class="section-num-big">28</div>
+            <div class="section-title-block">
+              <div class="section-title">Date Operators</div>
+              <div class="section-subtitle">
+                Extract and calculate date/time information
+              </div>
+            </div>
+          </div>
+
+          <p>
+            For production applications, store dates as MongoDB
+            <code>Date</code> values rather than plain strings when you need
+            date arithmetic, sorting, or date-based filtering.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">0</span>,
+    caption: <span class="c-val">1</span>,
+    year: { <span class="c-key">$year</span>: <span class="c-str">"$createdAt"</span> },
+    month: { <span class="c-key">$month</span>: <span class="c-str">"$createdAt"</span> },
+    day: { <span class="c-key">$dayOfMonth</span>: <span class="c-str">"$createdAt"</span> }
+  }}
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Practical rule:</strong> date operators expect compatible
+              date values. If your database currently stores ISO dates as
+              strings, consider converting them deliberately with
+              <code>$dateFromString</code> or, preferably, storing future
+              records as actual BSON dates.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 29: Type Conversion Operators ============ -->
+        <section class="section" id="type-operators">
+          <div class="section-header">
+            <div class="section-num-big">29</div>
+            <div class="section-title-block">
+              <div class="section-title">Type Conversion Operators</div>
+              <div class="section-subtitle">
+                Convert values to the type your next expression needs
+              </div>
+            </div>
+          </div>
+
+          <p>
+            Aggregation often receives mixed types, especially when data comes
+            from APIs or older collections. Type conversion lets you make
+            expressions predictable.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.orders.aggregate</span>([
+  { <span class="c-key">$set</span>: {
+    numericPrice: { <span class="c-key">$toDouble</span>: <span class="c-str">"$price"</span> },
+    numericQuantity: { <span class="c-key">$toInt</span>: <span class="c-str">"$quantity"</span> }
+  }},
+  { <span class="c-key">$set</span>: {
+    total: { <span class="c-key">$multiply</span>: [<span class="c-str">"$numericPrice"</span>, <span class="c-str">"$numericQuantity"</span>] }
+  }}
+])</pre>
+          </div>
+
+          <table class="flag-table">
+            <tr>
+              <th>Operator</th>
+              <th>Typical conversion</th>
+            </tr>
+            <tr>
+              <td class="f-name">$toInt</td>
+              <td class="f-desc">integer</td>
+            </tr>
+            <tr>
+              <td class="f-name">$toDouble</td>
+              <td class="f-desc">floating-point number</td>
+            </tr>
+            <tr>
+              <td class="f-name">$toString</td>
+              <td class="f-desc">string</td>
+            </tr>
+            <tr>
+              <td class="f-name">$toObjectId</td>
+              <td class="f-desc">ObjectId</td>
+            </tr>
+            <tr>
+              <td class="f-name">$convert</td>
+              <td class="f-desc">full control with onError/onNull</td>
+            </tr>
+          </table>
+        </section>
+
+        <!-- ============ SECTION 30: Variables ============ -->
+        <section class="section" id="var-operators">
+          <div class="section-header">
+            <div class="section-num-big">30</div>
+            <div class="section-title-block">
+              <div class="section-title">Variables</div>
+              <div class="section-subtitle">
+                Store intermediate values with $$ variables
+              </div>
+            </div>
+          </div>
+
+          <p>
+            MongoDB aggregation variables are referenced with <code>$$</code>.
+            Built-in variables and variables introduced by operators such as
+            <code>$let</code> help make complex expressions easier to read.
+          </p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-label">mongosh</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">0</span>,
+    caption: <span class="c-val">1</span>,
+    score: {
+      <span class="c-key">$let</span>: {
+        vars: {
+          likes: <span class="c-str">"$likesCount"</span>,
+          comments: <span class="c-str">"$commentsCount"</span>
+        },
+        in: {
+          <span class="c-key">$add</span>: [<span class="c-str">"$$likes"</span>, <span class="c-str">"$$comments"</span>]
+        }
+      }
+    }
+  }}
+])</pre>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">💡</div>
+            <p>
+              <strong>Remember:</strong> field references use
+              <code>$fieldName</code>; aggregation variables use
+              <code>$$variableName</code>. Confusing one dollar with two dollars
+              is a common beginner error.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ SECTION 31: Combined Pipelines ============ -->
+        <section class="section" id="case-studies">
+          <div class="section-header">
+            <div class="section-num-big">31</div>
+            <div class="section-title-block">
+              <div class="section-title">Combined Pipelines</div>
+              <div class="section-subtitle">
+                Put the stages together to solve real backend questions
+              </div>
+            </div>
+          </div>
+
+          <div class="case-study">
+            <div class="case-question">
+              Case 1 — Find the top 2 verified users by follower count
+            </div>
+
+            <div class="code-wrap">
+              <div class="code-header">
+                <span class="code-label">Pipeline</span>
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+              </div>
+              <pre><span class="c-cmd">db.users.aggregate</span>([
+  { <span class="c-key">$match</span>: { isVerified: <span class="c-val">true</span> } },
+  { <span class="c-key">$sort</span>: { followersCount: <span class="c-val">-1</span>, _id: <span class="c-val">1</span> } },
+  { <span class="c-key">$limit</span>: <span class="c-val">2</span> },
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">0</span>,
+    name: <span class="c-val">1</span>,
+    username: <span class="c-val">1</span>,
+    followersCount: <span class="c-val">1</span>
+  }}
+])</pre>
+            </div>
+          </div>
+
+          <div class="case-study">
+            <div class="case-question">
+              Case 2 — Count posts and total likes for every category
+            </div>
+
+            <div class="code-wrap">
+              <div class="code-header">
+                <span class="code-label">Pipeline</span>
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+              </div>
+              <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$group</span>: {
+    _id: <span class="c-str">"$category"</span>,
+    postCount: { <span class="c-key">$sum</span>: <span class="c-val">1</span> },
+    totalLikes: { <span class="c-key">$sum</span>: <span class="c-str">"$likesCount"</span> },
+    avgLikes: { <span class="c-key">$avg</span>: <span class="c-str">"$likesCount"</span> }
+  }},
+  { <span class="c-key">$sort</span>: { totalLikes: <span class="c-val">-1</span> } }
+])</pre>
+            </div>
+          </div>
+
+          <div class="case-study">
+            <div class="case-question">
+              Case 3 — Get posts with their author information
+            </div>
+
+            <div class="code-wrap">
+              <div class="code-header">
+                <span class="code-label">Pipeline</span>
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+              </div>
+              <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$lookup</span>: {
+    from: <span class="c-str">"users"</span>,
+    localField: <span class="c-str">"userId"</span>,
+    foreignField: <span class="c-str">"_id"</span>,
+    as: <span class="c-str">"author"</span>
+  }},
+  { <span class="c-key">$unwind</span>: <span class="c-str">"$author"</span> },
+  { <span class="c-key">$project</span>: {
+    _id: <span class="c-val">1</span>,
+    caption: <span class="c-val">1</span>,
+    likesCount: <span class="c-val">1</span>,
+    author: <span class="c-str">"$author.name"</span>
+  }}
+])</pre>
+            </div>
+          </div>
+
+          <div class="case-study">
+            <div class="case-question">
+              Case 4 — Dashboard: top posts + category statistics in one request
+            </div>
+
+            <div class="code-wrap">
+              <div class="code-header">
+                <span class="code-label">Pipeline</span>
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+              </div>
+              <pre><span class="c-cmd">db.posts.aggregate</span>([
+  { <span class="c-key">$facet</span>: {
+    topPosts: [
+      { <span class="c-key">$sort</span>: { likesCount: <span class="c-val">-1</span> } },
+      { <span class="c-key">$limit</span>: <span class="c-val">3</span> },
+      { <span class="c-key">$project</span>: { caption: <span class="c-val">1</span>, likesCount: <span class="c-val">1</span>, _id: <span class="c-val">0</span> } }
+    ],
+    categoryStats: [
+      { <span class="c-key">$group</span>: {
+        _id: <span class="c-str">"$category"</span>,
+        count: { <span class="c-key">$sum</span>: <span class="c-val">1</span> },
+        totalLikes: { <span class="c-key">$sum</span>: <span class="c-str">"$likesCount"</span> }
+      }},
+      { <span class="c-key">$sort</span>: { totalLikes: <span class="c-val">-1</span> } }
+    ]
+  }}
+])</pre>
+            </div>
+          </div>
+
+          <div class="note">
+            <div class="note-icon">✓</div>
+            <p>
+              <strong>Pipeline checklist:</strong> <code>$match</code> early
+              when possible → reshape with <code>$project</code>/<code
+                >$set</code
+              >
+              → join with <code>$lookup</code> when needed → group with
+              accumulators → <code>$sort</code> → <code>$limit</code> → final
+              projection. The exact order depends on the question.
+            </p>
+          </div>
+
+          <h3>Aggregation Revision Map</h3>
+          <table class="flag-table">
+            <tr>
+              <th>Need</th>
+              <th>Stage / operator</th>
+              <th>Think</th>
+            </tr>
+            <tr>
+              <td class="f-name">Filter documents</td>
+              <td class="f-desc">$match</td>
+              <td class="f-why">WHERE</td>
+            </tr>
+            <tr>
+              <td class="f-name">Group documents</td>
+              <td class="f-desc">$group</td>
+              <td class="f-why">GROUP BY</td>
+            </tr>
+            <tr>
+              <td class="f-name">Choose/reshape fields</td>
+              <td class="f-desc">$project</td>
+              <td class="f-why">SELECT / reshape</td>
+            </tr>
+            <tr>
+              <td class="f-name">Add a calculated field</td>
+              <td class="f-desc">$set / $addFields</td>
+              <td class="f-why">compute + keep document</td>
+            </tr>
+            <tr>
+              <td class="f-name">Order</td>
+              <td class="f-desc">$sort</td>
+              <td class="f-why">ORDER BY</td>
+            </tr>
+            <tr>
+              <td class="f-name">Take N</td>
+              <td class="f-desc">$limit</td>
+              <td class="f-why">TOP N</td>
+            </tr>
+            <tr>
+              <td class="f-name">Pagination offset</td>
+              <td class="f-desc">$skip</td>
+              <td class="f-why">skip earlier results</td>
+            </tr>
+            <tr>
+              <td class="f-name">Array to documents</td>
+              <td class="f-desc">$unwind</td>
+              <td class="f-why">one array item per document</td>
+            </tr>
+            <tr>
+              <td class="f-name">Join collections</td>
+              <td class="f-desc">$lookup</td>
+              <td class="f-why">LEFT JOIN</td>
+            </tr>
+            <tr>
+              <td class="f-name">Parallel reports</td>
+              <td class="f-desc">$facet</td>
+              <td class="f-why">multiple pipelines</td>
+            </tr>
+            <tr>
+              <td class="f-name">Count</td>
+              <td class="f-desc">$count / $sum: 1</td>
+              <td class="f-why">how many?</td>
+            </tr>
+          </table>
+
+          <div class="concept">
+            <div class="concept-label">Final mental model</div>
+            <p>
+              <strong>Aggregation = data flowing through stages.</strong> Each
+              stage receives the previous stage's output. Your job is to decide
+              what the data should look like after every step, then build the
+              smallest clear pipeline that produces the API result you need.
+            </p>
+          </div>
+        </section>
+
+        <hr class="divider" />
+
+        <footer>
+          <span>BACKEND.DB · MongoDB Aggregation Notes</span>
+          <span>Revision-ready · CRUD → Aggregation → Backend APIs</span>
+        </footer>
+      </main>
+    </div>
+
+    <div class="watermark">
+      <div class="watermark-logo"></div>
+      <div class="watermark-text">BACKEND.DB · AGGREGATION</div>
+    </div>
+
+    <script>
+      function copyCode(button) {
+        const pre = button.closest(".code-wrap").querySelector("pre");
+        const text = pre.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            const oldText = button.innerText;
+            button.innerText = "copied ✓";
+            setTimeout(() => {
+              button.innerText = oldText;
+            }, 1200);
+          })
+          .catch(() => {
+            button.innerText = "copy failed";
+            setTimeout(() => {
+              button.innerText = "copy";
+            }, 1200);
+          });
+      }
+
+      // Highlight the navigation item while scrolling through the notes.
+      const navLinks = [...document.querySelectorAll('nav a[href^="#"]')];
+      const sectionEls = navLinks
+        .map((link) =>
+          document.getElementById(link.getAttribute("href").slice(1)),
+        )
+        .filter(Boolean);
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              navLinks.forEach((link) => link.classList.remove("active"));
+              const active = document.querySelector(
+                `nav a[href="#${entry.target.id}"]`,
+              );
+              if (active) active.classList.add("active");
+            }
+          });
+        },
+        {
+          rootMargin: "-20% 0px -65% 0px",
+          threshold: 0,
+        },
+      );
+
+      sectionEls.forEach((section) => observer.observe(section));
+    </script>
+  </body>
+</html>

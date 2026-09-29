@@ -1,0 +1,20 @@
+{
+  "name": "aggregation-pipeline-class-backend",
+  "version": "1.0.0",
+  "description": "Node.js, Express, and MongoDB aggregation pipeline demos for live teaching",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/seed/seed.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

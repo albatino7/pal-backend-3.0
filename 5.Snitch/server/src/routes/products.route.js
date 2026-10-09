@@ -5,6 +5,10 @@ import {
   listProductController,
   unlistProductController,
   publishedProducts,
+  getSingleProductController,
+  updateProductController,
+  deleteProductController,
+  getSellerProductsController
 } from "../controller/product.controller.js";
 import { checkUser } from "../middleware/checkUser.middleware.js";
 import {
@@ -55,5 +59,23 @@ productRouter.patch(
   listProductValidator,
   listProductController,
 );
+
+// GET SINGLE PRODUCT BY ID
+productRouter.get("/:id", getSingleProductController);
+
+// UPDATE PRODUCT BY SELLER
+productRouter.put(
+  "/update/:id",
+  upload.array("images"),
+  checkUser,
+  checkSeller,
+  updateProductController
+);
+
+// DELETE PRODUCT BY SELLER
+productRouter.delete("/delete/:id", checkUser, checkSeller, deleteProductController);
+
+// GET ALL PRODUCTS FOR A SELLER (DASHBOARD)
+productRouter.get("/seller/dashboard", checkUser, checkSeller, getSellerProductsController);
 
 export default productRouter;

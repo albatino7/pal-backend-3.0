@@ -12,10 +12,12 @@ app.use(express.urlencoded({ extended: true }));
 import authRouter from "../routes/auth.route.js";
 import productRouter from "../routes/products.route.js";
 import cartRoute from "../routes/cart.route.js";
+import orderRouter from "../routes/order.route.js";
 
 app.use("/api/auth", authRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRoute);
+app.use("/api/orders", orderRouter);
 
 //Global Error Handler
 app.use(globalErrorHandler);

@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(30px, 110vh, 0) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti-piece {
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes success-entrance {
+  0% {
+    opacity: 0;
+    transform: translateY(35px) scale(0.92);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.02);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-success-entrance {
+  animation: success-entrance 650ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes success-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(16 185 129 / 0%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 14px rgb(16 185 129 / 12%);
+  }
+}
+
+.animate-success-pulse {
+  animation: success-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes check-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-30deg);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.15) rotate(5deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-check-pop {
+  animation: check-pop 500ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece,
+  .animate-success-entrance,
+  .animate-success-pulse,
+  .animate-check-pop {
+    animation: none !important;
+  }
+}

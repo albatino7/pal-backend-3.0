@@ -13,7 +13,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCurrentUser } from "../../auth/hooks/useCurrentUser";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
@@ -25,6 +25,11 @@ import { useProductMutations } from "../hooks/useProductMutations";
 import { usePublishedProducts } from "../hooks/usePublishedProducts";
 import { openDeleteModal, openEditModal } from "../productsSlice";
 import { useCart } from "../../cart/hooks/useCart";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductDetailImage,
+  getProductGalleryThumbnail,
+} from "../../../lib/imageOptimization";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -36,6 +41,10 @@ export default function ProductDetailPage() {
   const { data: publishedData } = usePublishedProducts({ page: 1, limit: 12 });
   const { togglePublishMutation } = useProductMutations();
   const { addToCart, isAdding } = useCart();
+
+  const isFormModalOpen = useSelector((state) => state.products.isFormModalOpen);
+  const isQuickViewOpen = useSelector((state) => Boolean(state.products.quickViewProduct));
+  const isDeleteModalOpen = useSelector((state) => Boolean(state.products.deletingProduct));
 
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -228,11 +237,19 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left: Gallery (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-[3/4] w-full overflow-hidden bg-white border border-black/10 shadow-sm">
+          <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#e9e8e3] border border-black/10 shadow-sm">
             <img
-              src={images[activeImageIdx]}
-              alt={product.title}
-              className="h-full w-full object-cover object-top"
+              src={getProductDetailImage(images[activeImageIdx])}
+              alt={product.title || "Product image"}
+              width={900}
+              height={1200}
+              loading="eager"
+              decoding="sync"
+              fetchPriority="high"
+              onError={(e) => {
+                e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+              }}
+              className="h-full w-full object-cover object-top transition duration-300"
             />
             {isOutOfStock && (
               <span className="absolute left-4 top-4 bg-black/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white">
@@ -249,11 +266,21 @@ export default function ProductDetailPage() {
                   key={idx}
                   type="button"
                   onClick={() => setActiveImageIdx(idx)}
-                  className={`size-20 shrink-0 overflow-hidden border-2 transition ${
+                  className={`size-20 shrink-0 overflow-hidden border-2 bg-paper transition ${
                     activeImageIdx === idx ? "border-ink" : "border-black/10 opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={getProductGalleryThumbnail(img)}
+                    alt=""
+                    width={80}
+                    height={80}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                    }}
+                    className="h-full w-full object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -309,7 +336,7 @@ export default function ProductDetailPage() {
                       }}
                       className={`min-w-12 px-3 py-2.5 text-xs font-black uppercase tracking-wider transition ${
                         isSelected
-                          ? "bg-ink text-lime border-ink"
+                          ? "bg-lime text-ink border-lime shadow-sm"
                           : isAvailable
                           ? "border border-black/15 bg-white text-ink hover:border-black"
                           : "border border-black/5 bg-black/[0.03] text-black/25 line-through cursor-not-allowed"
@@ -407,17 +434,21 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {similarProducts.map((simProduct) => (
-              <ProductCard key={simProduct._id} product={simProduct} />
+            {similarProducts.map((simProduct, index) => (
+              <ProductCard
+                key={simProduct._id}
+                product={simProduct}
+                priority={index < 2}
+              />
             ))}
           </div>
         </section>
       )}
 
-      {/* Modals for Edit, Delete and Quick View */}
-      <ProductDetailModal />
-      <ProductFormModal />
-      <DeleteConfirmModal />
+      {/* Modals for Edit, Delete and Quick View (only mounted when active) */}
+      {isQuickViewOpen && <ProductDetailModal />}
+      {isFormModalOpen && <ProductFormModal />}
+      {isDeleteModalOpen && <DeleteConfirmModal />}
     </div>
   );
 }

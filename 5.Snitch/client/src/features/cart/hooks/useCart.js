@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   addToCart,
   clearCart,
@@ -15,13 +15,14 @@ export function useCart() {
     queryKey: ["cart"],
     queryFn: fetchCart,
     staleTime: 1000 * 30, // 30 seconds
+    placeholderData: (previousData) => previousData,
   });
 
   const cart = query.data;
 
-  const invalidate = () => {
+  const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["cart"] });
-  };
+  }, [queryClient]);
 
   const addMutation = useMutation({
     mutationFn: addToCart,

@@ -1,4 +1,5 @@
 import { ArrowDownUp, RotateCcw, Search, X } from "lucide-react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   resetFilters,
@@ -16,11 +17,52 @@ const SORT_OPTIONS = [
   { value: "name", label: "Name: A to Z" },
 ];
 
-export default function ProductFilters({ totalResults = 0 }) {
+function ProductFiltersComponent({ totalResults = 0 }) {
   const dispatch = useDispatch();
-  const { searchQuery, selectedSize, sortBy } = useSelector((state) => state.products);
 
-  const hasActiveFilters = searchQuery !== "" || selectedSize !== "ALL" || sortBy !== "newest";
+  // Granular selectors to avoid re-rendering on modal/pagination changes
+  const reduxSearchQuery = useSelector((state) => state.products.searchQuery);
+  const selectedSize = useSelector((state) => state.products.selectedSize);
+  const sortBy = useSelector((state) => state.products.sortBy);
+
+  // Local state for instant input responsiveness (INP < 50ms)
+  const [localSearch, setLocalSearch] = useState(reduxSearchQuery);
+  const debounceTimerRef = useRef(null);
+
+  // Keep local search synchronized if Redux search changes externally (e.g. Reset button)
+  useEffect(() => {
+    setLocalSearch(reduxSearchQuery);
+  }, [reduxSearchQuery]);
+
+  const handleSearchChange = (val) => {
+    setLocalSearch(val);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      dispatch(setSearchQuery(val));
+    }, 250);
+  };
+
+  const handleClearSearch = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    setLocalSearch("");
+    dispatch(setSearchQuery(""));
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const hasActiveFilters =
+    reduxSearchQuery !== "" || selectedSize !== "ALL" || sortBy !== "newest";
 
   return (
     <div className="space-y-4 border-b border-black/[0.08] pb-6">
@@ -33,16 +75,17 @@ export default function ProductFilters({ totalResults = 0 }) {
           />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+            value={localSearch}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search fits, styles, fabrics..."
             className="w-full border border-black/10 bg-white/70 py-2.5 pl-9 pr-8 text-xs placeholder:text-ink/35 focus:border-ink focus:bg-white focus:outline-none"
           />
-          {searchQuery && (
+          {localSearch && (
             <button
               type="button"
-              onClick={() => dispatch(setSearchQuery(""))}
+              onClick={handleClearSearch}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink"
+              aria-label="Clear search query"
             >
               <X size={14} />
             </button>
@@ -72,7 +115,13 @@ export default function ProductFilters({ totalResults = 0 }) {
           {hasActiveFilters && (
             <button
               type="button"
-              onClick={() => dispatch(resetFilters())}
+              onClick={() => {
+                if (debounceTimerRef.current) {
+                  clearTimeout(debounceTimerRef.current);
+                }
+                setLocalSearch("");
+                dispatch(resetFilters());
+              }}
               className="flex items-center gap-1.5 border border-black/10 bg-white/50 px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-ink/60 transition hover:bg-ink hover:text-white"
             >
               <RotateCcw size={12} /> Reset
@@ -96,7 +145,7 @@ export default function ProductFilters({ totalResults = 0 }) {
                 onClick={() => dispatch(setSelectedSize(size))}
                 className={`min-w-8 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] transition ${
                   isSelected
-                    ? "bg-ink text-lime shadow-sm"
+                    ? "bg-lime text-ink font-black shadow-sm"
                     : "border border-black/10 bg-white/70 text-ink/65 hover:border-black/30 hover:text-ink"
                 }`}
               >
@@ -113,3 +162,6 @@ export default function ProductFilters({ totalResults = 0 }) {
     </div>
   );
 }
+
+export default memo(ProductFiltersComponent);
+

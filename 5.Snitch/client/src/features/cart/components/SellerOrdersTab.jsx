@@ -17,6 +17,10 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "../../products/components/ProductCard";
 import { useAllOrders, useUpdateOrderStatus } from "../hooks/useOrders";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductGalleryThumbnail,
+} from "../../../lib/imageOptimization";
 
 const STATUS_OPTIONS = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
@@ -298,9 +302,15 @@ export default function SellerOrdersTab() {
                         >
                           <div className="flex items-center gap-3">
                             <img
-                              src={img}
+                              src={getProductGalleryThumbnail(img)}
                               alt=""
-                              className="size-12 object-cover object-top border border-black/10"
+                              width={48}
+                              height={48}
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                              }}
+                              className="size-12 object-cover object-top border border-black/10 shrink-0"
                             />
                             <div>
                               <p className="font-bold text-xs text-ink">

@@ -63,14 +63,14 @@ export default function OrderSuccessModal({ order, onClose }) {
           <Link
             to="/orders"
             onClick={onClose}
-            className="flex-1 flex items-center justify-center gap-2 bg-lime py-3.5 text-[11px] font-black uppercase tracking-[0.14em] text-ink hover:bg-white border border-black/10 transition"
+            className="flex-1 flex items-center justify-center gap-2 bg-lime py-3.5 text-[11px] font-black uppercase tracking-[0.14em] text-ink hover:bg-ink hover:text-paper border border-black/10 transition"
           >
             <PackageCheck size={14} /> View in My Orders
           </Link>
           <Link
             to="/products"
             onClick={onClose}
-            className="flex-1 flex items-center justify-center gap-2 bg-ink py-3.5 text-[11px] font-black uppercase tracking-[0.14em] text-white hover:bg-black transition"
+            className="flex-1 flex items-center justify-center gap-2 bg-ink py-3.5 text-[11px] font-black uppercase tracking-[0.14em] text-paper hover:bg-lime hover:text-ink transition"
           >
             <ShoppingBag size={14} /> Back to Catalog
           </Link>

@@ -5,7 +5,7 @@ import {
   RefreshCw,
   Sparkles,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useDeferredValue, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useCurrentUser } from "../../auth/hooks/useCurrentUser";
@@ -39,9 +39,17 @@ export default function ProductsPage() {
   const { user } = useCurrentUser();
   const isSeller = user?.role === "seller";
 
-  const { page, limit, searchQuery, selectedSize, sortBy } = useSelector(
-    (state) => state.products
-  );
+  // Granular selectors so modal state changes don't re-render the catalog
+  const page = useSelector((state) => state.products.page);
+  const limit = useSelector((state) => state.products.limit);
+  const searchQuery = useSelector((state) => state.products.searchQuery);
+  const selectedSize = useSelector((state) => state.products.selectedSize);
+  const sortBy = useSelector((state) => state.products.sortBy);
+  const isFormModalOpen = useSelector((state) => state.products.isFormModalOpen);
+  const isQuickViewOpen = useSelector((state) => Boolean(state.products.quickViewProduct));
+
+  // Defer search filtering for responsive, non-blocking typing
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const { data, isLoading, isError, error, refetch, isFetching } =
     usePublishedProducts({ page, limit });
@@ -49,12 +57,12 @@ export default function ProductsPage() {
   const rawProducts = data?.products || [];
   const totalPages = data?.totalPages || 1;
 
-  // Filter & sort logic
+  // Filter & sort logic with deferred search
   const filteredProducts = useMemo(() => {
     let list = [...rawProducts];
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
+    if (deferredSearchQuery.trim()) {
+      const q = deferredSearchQuery.toLowerCase().trim();
       list = list.filter(
         (p) =>
           p.title?.toLowerCase().includes(q) ||
@@ -77,7 +85,17 @@ export default function ProductsPage() {
     }
 
     return list;
-  }, [rawProducts, searchQuery, selectedSize, sortBy]);
+  }, [rawProducts, deferredSearchQuery, selectedSize, sortBy]);
+
+  const handlePageChange = useCallback(
+    (newPage) => dispatch(setPage(newPage)),
+    [dispatch]
+  );
+
+  const handlePageSizeChange = useCallback(
+    (newLimit) => dispatch(setLimit(newLimit)),
+    [dispatch]
+  );
 
   return (
     <div className="space-y-8">
@@ -163,8 +181,12 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product._id} product={product} />
+          {filteredProducts.map((product, index) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              priority={index < 4}
+            />
           ))}
         </div>
       )}
@@ -175,15 +197,15 @@ export default function ProductsPage() {
         totalPages={totalPages}
         totalItems={data?.total ?? rawProducts.length}
         pageSize={limit}
-        onPageChange={(newPage) => dispatch(setPage(newPage))}
-        onPageSizeChange={(newLimit) => dispatch(setLimit(newLimit))}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
         pageSizeOptions={[8, 12, 16, 24]}
         isLoading={isFetching}
       />
 
-      {/* Modals */}
-      <ProductDetailModal />
-      <ProductFormModal />
+      {/* Conditionally rendered modals to save render and memory cost */}
+      {isQuickViewOpen && <ProductDetailModal />}
+      {isFormModalOpen && <ProductFormModal />}
     </div>
   );
 }

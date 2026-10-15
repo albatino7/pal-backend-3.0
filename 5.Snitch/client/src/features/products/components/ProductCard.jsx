@@ -1,7 +1,11 @@
 import { Eye, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductCardThumbnail,
+} from "../../../lib/imageOptimization";
 import { openQuickView } from "../productsSlice";
 
 export function formatPrice(price) {
@@ -10,16 +14,36 @@ export function formatPrice(price) {
   return `${symbol}${Number(price.amount).toLocaleString("en-IN")}`;
 }
 
-export default function ProductCard({ product }) {
+function ProductCardComponent({ product, priority = false }) {
   const dispatch = useDispatch();
   const [isHovered, setIsHovered] = useState(false);
+  const [imgSrc, setImgSrc] = useState(null);
 
   const images = product?.images && product.images.length > 0 ? product.images : [];
-  const primaryImage = images[0] || "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80";
-  const hoverImage = images[1] || primaryImage;
+  const rawPrimaryImage = images[0] || DEFAULT_PRODUCT_IMAGE;
+  const rawHoverImage = images[1] || rawPrimaryImage;
 
-  const totalStock = product?.sizes?.reduce((acc, curr) => acc + (curr.stock || 0), 0) ?? 0;
+  const primaryThumb = getProductCardThumbnail(rawPrimaryImage);
+  const hoverThumb = getProductCardThumbnail(rawHoverImage);
+
+  const currentSrc = imgSrc || (isHovered ? hoverThumb : primaryThumb);
+
+  const totalStock =
+    product?.sizes?.reduce((acc, curr) => acc + (curr.stock || 0), 0) ?? 0;
   const isOutOfStock = totalStock === 0;
+
+  const handleQuickView = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dispatch(openQuickView(product));
+    },
+    [dispatch, product]
+  );
+
+  const handleImageError = useCallback(() => {
+    setImgSrc(DEFAULT_PRODUCT_IMAGE);
+  }, []);
 
   return (
     <div
@@ -27,16 +51,21 @@ export default function ProductCard({ product }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image container */}
+      {/* Image container with strict 3/4 aspect ratio */}
       <Link
         to={`/products/${product._id}`}
         className="relative aspect-[3/4] w-full overflow-hidden bg-[#e9e8e3] block"
       >
         <img
-          src={isHovered ? hoverImage : primaryImage}
-          alt={product.title}
+          src={currentSrc}
+          alt={product.title || "Product image"}
+          width={450}
+          height={600}
+          onError={handleImageError}
           className="h-full w-full object-cover object-top transition duration-500 ease-out group-hover:scale-105"
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          fetchPriority={priority ? "high" : "auto"}
         />
 
         {/* Badges */}
@@ -61,11 +90,7 @@ export default function ProductCard({ product }) {
         <div className="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-between gap-2 p-3 transition-transform duration-200 ease-out group-hover:translate-y-0 bg-gradient-to-t from-black/60 to-transparent z-10">
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              dispatch(openQuickView(product));
-            }}
+            onClick={handleQuickView}
             className="flex flex-1 items-center justify-center gap-2 bg-white px-3 py-2.5 text-[9px] font-black uppercase tracking-[0.14em] text-ink shadow-sm transition hover:bg-lime"
           >
             <Eye size={13} /> Quick view
@@ -117,3 +142,6 @@ export default function ProductCard({ product }) {
     </div>
   );
 }
+
+export default memo(ProductCardComponent);
+

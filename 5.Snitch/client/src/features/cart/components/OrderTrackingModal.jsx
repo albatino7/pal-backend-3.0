@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "../../products/components/ProductCard";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductCardThumbnail,
+} from "../../../lib/imageOptimization";
 
 const STEPS = [
   {
@@ -184,7 +188,7 @@ export default function OrderTrackingModal({ order, productItem, onClose }) {
                           isCurrent
                             ? "bg-lime border-ink text-ink shadow-md"
                             : isDone
-                            ? "bg-ink border-ink text-white"
+                            ? "bg-ink border-ink text-paper"
                             : "bg-paper border-black/15 text-ink/30"
                         }`}
                       >
@@ -229,8 +233,14 @@ export default function OrderTrackingModal({ order, productItem, onClose }) {
 
               <div className="flex items-center gap-4">
                 <img
-                  src={image}
-                  alt={productData.title}
+                  src={getProductCardThumbnail(image)}
+                  alt={productData.title || "Product"}
+                  width={80}
+                  height={80}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                  }}
                   className="size-20 object-cover object-top border border-black/10 shrink-0"
                 />
 
@@ -290,7 +300,7 @@ export default function OrderTrackingModal({ order, productItem, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="bg-ink px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.14em] text-white hover:bg-black transition"
+            className="bg-ink px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.14em] text-paper hover:bg-lime hover:text-ink transition"
           >
             Close Tracker
           </button>

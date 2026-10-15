@@ -1,10 +1,36 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
-@theme {
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --color-lime: #c9f250;
   --color-paper: #f6f5f0;
   --color-ink: #1d201a;
+  --color-surface: #ffffff;
+  --color-border: #e4e2d9;
+  --color-muted: #66685f;
+  --color-browser-bar: #f6f5f0;
+}
+
+.dark {
+  color-scheme: dark;
   --color-lime: #c9f250;
+  --color-paper: #0e100d;
+  --color-ink: #f4f4ee;
+  --color-surface: #171a15;
+  --color-border: #30332b;
+  --color-muted: #a5a79d;
+  --color-browser-bar: #0f110e;
+}
+
+@theme {
+  --color-lime: var(--color-lime);
+  --color-paper: var(--color-paper);
+  --color-ink: var(--color-ink);
+  --color-surface: var(--color-surface);
+  --color-border: var(--color-border);
+  --color-muted: var(--color-muted);
   --font-sans: "DM Sans", sans-serif;
   --font-display: "Space Grotesk", sans-serif;
 }
@@ -17,12 +43,17 @@
   body {
     margin: 0;
     min-width: 320px;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 180ms ease, color 180ms ease;
   }
 
   button,
-  input {
+  input,
+  select,
+  textarea {
     font: inherit;
   }
 
@@ -32,16 +63,206 @@
   }
 }
 
+/* Dark mode surface & border mappings for seamless visual consistency */
+.dark .bg-white {
+  background-color: var(--color-surface) !important;
+}
+
+.dark .bg-white\/50,
+.dark .bg-white\/60,
+.dark .bg-white\/70,
+.dark .bg-white\/80 {
+  background-color: rgba(23, 26, 21, 0.88) !important;
+}
+
+.dark .bg-paper {
+  background-color: var(--color-paper) !important;
+}
+
+.dark .bg-paper\/90,
+.dark .bg-paper\/98 {
+  background-color: rgba(14, 16, 13, 0.94) !important;
+}
+
+.dark .bg-\[\#f0eee4\],
+.dark .bg-\[\#e9e8e3\],
+.dark .bg-\[\#f7f6f2\] {
+  background-color: #1a1e16 !important;
+}
+
+.dark .border-black\/5,
+.dark .border-black\/10,
+.dark .border-black\/15,
+.dark .border-black\/20,
+.dark .border-black\/30,
+.dark .border-black\/\[0\.08\],
+.dark .border-black\/\[0\.07\],
+.dark .border-black\/\[0\.06\] {
+  border-color: var(--color-border) !important;
+}
+
+.dark .border-black\/\[0\.05\] {
+  border-color: rgba(48, 51, 43, 0.5) !important;
+}
+
+.dark .bg-black\/5,
+.dark .bg-black\/10 {
+  background-color: rgba(244, 244, 238, 0.08) !important;
+}
+
+.dark .bg-black\/\[0\.02\],
+.dark .bg-black\/\[0\.03\] {
+  background-color: rgba(244, 244, 238, 0.04) !important;
+}
+
+.dark .text-ink\/35,
+.dark .text-ink\/40,
+.dark .text-ink\/45,
+.dark .text-ink\/50,
+.dark .text-ink\/60,
+.dark .text-ink\/65 {
+  color: var(--color-muted) !important;
+}
+
+.dark .text-ink\/70,
+.dark .text-ink\/75 {
+  color: rgba(244, 244, 238, 0.85) !important;
+}
+
+.dark .shadow-sm,
+.dark .shadow-2xl,
+.dark .shadow-md {
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Dark mode alerts, tags, and status badge refinements */
+.dark .bg-amber-50,
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #60a5fa !important;
+}
+
+.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.12) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+  color: #c084fc !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+
+.dark .bg-red-50,
+.dark .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+
+.dark .text-amber-600,
+.dark .text-amber-700,
+.dark .text-amber-800 {
+  color: #fbbf24 !important;
+}
+
+.dark .text-emerald-600,
+.dark .text-emerald-700,
+.dark .text-emerald-800 {
+  color: #34d399 !important;
+}
+
+.dark .text-red-600,
+.dark .text-red-700,
+.dark .text-red-800 {
+  color: #f87171 !important;
+}
+
+.dark .text-blue-800 {
+  color: #60a5fa !important;
+}
+
+.dark .text-purple-800 {
+  color: #c084fc !important;
+}
+
+.dark .text-black\/20,
+.dark .text-black\/25,
+.dark .text-black\/30,
+.dark .text-black\/40 {
+  color: rgba(244, 244, 238, 0.28) !important;
+}
+
+.dark .hover\:border-black:hover {
+  border-color: var(--color-ink) !important;
+}
+
+/* Inverted buttons & badges in dark mode */
+.dark .bg-ink,
+.dark .bg-ink * {
+  color: var(--color-paper) !important;
+}
+
+.dark .hover\:bg-ink:hover,
+.dark .hover\:bg-ink:hover * {
+  background-color: var(--color-ink) !important;
+  color: var(--color-paper) !important;
+}
+
+/* Ensure ALL neon-lime elements strictly use dark ink text (#1d201a) for WCAG AA contrast */
+.bg-lime,
+.bg-lime *,
+.dark .bg-lime,
+.dark .bg-lime * {
+  color: #1d201a !important;
+}
+
+.bg-lime.hover\:bg-ink:hover,
+.dark .bg-lime.hover\:bg-ink:hover,
+button.bg-lime:hover,
+a.bg-lime:hover {
+  background-color: var(--color-ink) !important;
+  color: var(--color-paper) !important;
+}
+
+.bg-lime.hover\:bg-ink:hover *,
+.dark .bg-lime.hover\:bg-ink:hover *,
+button.bg-lime:hover *,
+a.bg-lime:hover * {
+  color: var(--color-paper) !important;
+}
+
+/* Subtle animations & reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer components {
   .nav-link {
     position: relative;
-    color: rgb(29 32 26 / 65%);
+    color: var(--color-muted);
     transition: color 160ms ease;
   }
 
   .nav-link:hover,
   .nav-link.active {
-    color: #1d201a;
+    color: var(--color-ink);
   }
 
   .nav-link.active::after {
@@ -50,7 +271,7 @@
     bottom: -9px;
     left: 0;
     height: 2px;
-    background: #c9f250;
+    background: var(--color-lime);
     content: "";
   }
 
@@ -59,54 +280,65 @@
     align-items: center;
     gap: 7px;
     padding: 8px 10px;
-    color: rgb(29 32 26 / 55%);
+    color: var(--color-muted);
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    transition: color 160ms ease, background-color 160ms ease;
   }
 
   .mobile-nav-link.active {
-    color: #1d201a;
+    color: var(--color-ink);
   }
 
   .form-input {
     width: 100%;
-    border: 1px solid rgb(29 32 26 / 15%);
+    border: 1px solid var(--color-border);
     border-radius: 0;
-    background: rgb(255 255 255 / 55%);
+    background: var(--color-surface);
     padding: 15px 14px;
-    color: #1d201a;
+    color: var(--color-ink);
     font-size: 13px;
     outline: none;
-    transition: border-color 160ms ease, background 160ms ease;
+    transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
   }
 
   .form-input::placeholder {
-    color: rgb(29 32 26 / 32%);
+    color: var(--color-muted);
   }
 
   .form-input:focus {
-    border-color: #1d201a;
-    background: #fff;
+    border-color: var(--color-ink);
+    background: var(--color-surface);
+  }
+
+  .dark .form-input:focus {
+    border-color: var(--color-lime);
+    box-shadow: 0 0 0 1px var(--color-lime);
   }
 
   .action-link {
     display: inline-flex;
     align-items: center;
     gap: 24px;
-    background: #c9f250;
+    background: var(--color-lime);
     padding: 15px 20px;
-    color: #1d201a;
+    color: #1d201a !important; /* Always dark ink text on lime for high contrast */
     font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    transition: background 160ms ease, color 160ms ease;
+    transition: background-color 160ms ease, color 160ms ease;
   }
 
   .action-link:hover {
-    background: #1d201a;
-    color: #fff;
+    background: var(--color-ink);
+    color: #ffffff !important;
+  }
+
+  .dark .action-link:hover {
+    background: #ffffff;
+    color: #1d201a !important;
   }
 }

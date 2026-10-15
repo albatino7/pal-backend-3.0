@@ -15,7 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useCurrentUser } from "../../auth/hooks/useCurrentUser";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
@@ -27,6 +27,10 @@ import { useSellerProducts } from "../hooks/useSellerProducts";
 import { openCreateModal, openDeleteModal, openEditModal } from "../productsSlice";
 import SellerOrdersTab from "../../cart/components/SellerOrdersTab";
 import { useAllOrders } from "../../cart/hooks/useOrders";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductGalleryThumbnail,
+} from "../../../lib/imageOptimization";
 
 export default function SellerDashboardPage() {
   const dispatch = useDispatch();
@@ -36,6 +40,9 @@ export default function SellerDashboardPage() {
   const { data: products = [], isLoading, isError, error, refetch } = useSellerProducts();
   const { data: orders = [] } = useAllOrders();
   const { togglePublishMutation } = useProductMutations();
+
+  const isFormModalOpen = useSelector((state) => state.products.isFormModalOpen);
+  const isDeleteModalOpen = useSelector((state) => Boolean(state.products.deletingProduct));
 
   const [activeTab, setActiveTab] = useState("inventory");
   const [searchTerm, setSearchTerm] = useState("");
@@ -314,8 +321,14 @@ export default function SellerDashboardPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <img
-                          src={img}
+                          src={getProductGalleryThumbnail(img)}
                           alt=""
+                          width={56}
+                          height={56}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                          }}
                           className="size-14 object-cover object-top border border-black/10 shrink-0"
                         />
                         <div className="max-w-xs">
@@ -432,9 +445,9 @@ export default function SellerDashboardPage() {
         </>
       )}
 
-      {/* Modals */}
-      <ProductFormModal />
-      <DeleteConfirmModal />
+      {/* Modals (only mounted when active) */}
+      {isFormModalOpen && <ProductFormModal />}
+      {isDeleteModalOpen && <DeleteConfirmModal />}
     </div>
   );
 }

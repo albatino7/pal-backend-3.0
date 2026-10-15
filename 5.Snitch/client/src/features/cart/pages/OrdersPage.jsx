@@ -16,6 +16,10 @@ import { Link } from "react-router-dom";
 import { formatPrice } from "../../products/components/ProductCard";
 import OrderTrackingModal from "../components/OrderTrackingModal";
 import { useMyOrders } from "../hooks/useOrders";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductGalleryThumbnail,
+} from "../../../lib/imageOptimization";
 
 function getStatusBadge(status) {
   switch (status) {
@@ -203,8 +207,14 @@ export default function OrdersPage() {
                     >
                       <div className="flex items-center gap-4">
                         <img
-                          src={img}
+                          src={getProductGalleryThumbnail(img)}
                           alt=""
+                          width={64}
+                          height={64}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                          }}
                           className="size-16 object-cover object-top border border-black/10 shrink-0"
                         />
                         <div>

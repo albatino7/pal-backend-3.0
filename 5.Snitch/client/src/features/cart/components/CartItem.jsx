@@ -1,8 +1,13 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "../../products/components/ProductCard";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductCardThumbnail,
+} from "../../../lib/imageOptimization";
 
-export default function CartItem({ item, onUpdateQuantity, onRemove, isUpdating }) {
+function CartItemComponent({ item, onUpdateQuantity, onRemove, isUpdating }) {
   const product = item.product;
   if (!product) return null;
 
@@ -10,7 +15,8 @@ export default function CartItem({ item, onUpdateQuantity, onRemove, isUpdating 
   const maxStock = currentSizeObj?.stock ?? 10;
 
   const images = product.images && product.images.length > 0 ? product.images : [];
-  const image = images[0] || "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80";
+  const rawImage = images[0] || DEFAULT_PRODUCT_IMAGE;
+  const image = getProductCardThumbnail(rawImage);
 
   const handleDecrease = () => {
     if (item.quantity > 1) {
@@ -45,7 +51,13 @@ export default function CartItem({ item, onUpdateQuantity, onRemove, isUpdating 
       >
         <img
           src={image}
-          alt={product.title}
+          alt={product.title || "Cart item"}
+          width={96}
+          height={96}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+          }}
           className="h-full w-full object-cover object-top"
         />
       </Link>
@@ -117,3 +129,6 @@ export default function CartItem({ item, onUpdateQuantity, onRemove, isUpdating 
     </div>
   );
 }
+
+export default memo(CartItemComponent);
+

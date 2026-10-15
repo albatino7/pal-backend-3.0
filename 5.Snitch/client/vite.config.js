@@ -14,5 +14,32 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules")) {
+              if (id.includes("react-router-dom") || id.includes("react-dom") || id.includes("/react/")) {
+                return "vendor-react";
+              }
+              if (id.includes("@tanstack/react-query")) {
+                return "vendor-query";
+              }
+              if (id.includes("@reduxjs/toolkit") || id.includes("react-redux")) {
+                return "vendor-redux";
+              }
+              if (id.includes("lucide-react")) {
+                return "vendor-icons";
+              }
+              if (id.includes("axios")) {
+                return "vendor-network";
+              }
+            }
+          },
+        },
+      },
+    },
   };
 });

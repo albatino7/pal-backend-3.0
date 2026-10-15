@@ -5,6 +5,11 @@ import { Link } from "react-router-dom";
 import { closeQuickView } from "../productsSlice";
 import { formatPrice } from "./ProductCard";
 import { useCart } from "../../cart/hooks/useCart";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductDetailImage,
+  getProductGalleryThumbnail,
+} from "../../../lib/imageOptimization";
 
 export default function ProductDetailModal() {
   const dispatch = useDispatch();
@@ -67,8 +72,13 @@ export default function ProductDetailModal() {
         <div className="md:w-1/2 p-6 flex flex-col items-center bg-[#f7f6f2] border-b md:border-b-0 md:border-r border-black/5">
           <div className="aspect-[3/4] w-full max-h-[420px] overflow-hidden bg-white shadow-inner">
             <img
-              src={images[selectedImageIdx]}
-              alt={product.title}
+              src={getProductDetailImage(images[selectedImageIdx])}
+              alt={product.title || "Product quick view"}
+              width={600}
+              height={800}
+              onError={(e) => {
+                e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+              }}
               className="h-full w-full object-cover object-top"
             />
           </div>
@@ -80,11 +90,21 @@ export default function ProductDetailModal() {
                   key={idx}
                   type="button"
                   onClick={() => setSelectedImageIdx(idx)}
-                  className={`relative size-14 shrink-0 overflow-hidden border-2 transition ${
+                  className={`relative size-14 shrink-0 overflow-hidden border-2 bg-paper transition ${
                     selectedImageIdx === idx ? "border-ink" : "border-black/10 opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={getProductGalleryThumbnail(img)}
+                    alt=""
+                    width={56}
+                    height={56}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                    }}
+                    className="h-full w-full object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -140,7 +160,7 @@ export default function ProductDetailModal() {
                       onClick={() => setSelectedSize(size)}
                       className={`min-w-11 px-3 py-2 text-xs font-bold uppercase tracking-wider transition ${
                         isSelected
-                          ? "bg-ink text-lime border-ink"
+                          ? "bg-lime text-ink border-lime shadow-sm"
                           : isAvailable
                           ? "border border-black/15 bg-white text-ink hover:border-black"
                           : "border border-black/5 bg-black/[0.03] text-black/25 line-through cursor-not-allowed"

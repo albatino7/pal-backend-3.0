@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { memo, useMemo } from "react";
 
-export default function Pagination({
+function PaginationComponent({
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
@@ -19,7 +20,7 @@ export default function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalItems || currentPage * pageSize);
 
   // Generate page numbers with ellipsis
-  const getPageNumbers = () => {
+  const pageNumbers = useMemo(() => {
     const pages = [];
     const maxVisible = 5;
 
@@ -55,7 +56,7 @@ export default function Pagination({
     }
 
     return pages;
-  };
+  }, [currentPage, totalPages]);
 
   const handlePageSelect = (page) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
@@ -118,7 +119,7 @@ export default function Pagination({
 
         {/* Page numbers */}
         <div className="flex items-center gap-1">
-          {getPageNumbers().map((p, idx) =>
+          {pageNumbers.map((p, idx) =>
             p === "..." ? (
               <span key={`dots-${idx}`} className="px-1 text-xs text-ink/30 select-none">
                 ...
@@ -131,7 +132,7 @@ export default function Pagination({
                 onClick={() => handlePageSelect(p)}
                 className={`flex size-8 items-center justify-center text-xs font-black transition ${
                   p === currentPage
-                    ? "bg-ink text-lime border-ink"
+                    ? "bg-lime text-ink border-lime shadow-sm"
                     : "border border-black/10 bg-white text-ink/70 hover:border-black hover:text-ink"
                 }`}
               >
@@ -165,3 +166,5 @@ export default function Pagination({
     </div>
   );
 }
+
+export default memo(PaginationComponent);

@@ -1,4 +1,5 @@
 import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import ProductCard from "../../products/components/ProductCard";
 import ProductDetailModal from "../../products/components/ProductDetailModal";
@@ -6,6 +7,7 @@ import { usePublishedProducts } from "../../products/hooks/usePublishedProducts"
 
 export default function HomePage() {
   const { data } = usePublishedProducts({ page: 1, limit: 4 });
+  const isQuickViewOpen = useSelector((state) => Boolean(state.products.quickViewProduct));
   const featuredProducts = data?.products?.slice(0, 4) || [];
 
   return (
@@ -15,7 +17,7 @@ export default function HomePage() {
           className="absolute inset-0 bg-cover bg-center opacity-65"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85')",
+              "url('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1280&q=80')",
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
@@ -71,13 +73,13 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
             {featuredProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product._id} product={product} priority={true} />
             ))}
           </div>
         </section>
       )}
 
-      <ProductDetailModal />
+      {isQuickViewOpen && <ProductDetailModal />}
     </div>
   );
 }

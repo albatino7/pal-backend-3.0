@@ -23,4 +23,11 @@ const userShema = new mongoose.Schema({
   },
 });
 
-export const userModel = mongoose.model("usrs", userShema);
+// Register model "users" mapping to collection "usrs" so existing MongoDB data is preserved
+export const userModel =
+  mongoose.models.users || mongoose.model("users", userShema, "usrs");
+
+// Also register "usrs" model alias to maintain backward compatibility
+if (!mongoose.models.usrs) {
+  mongoose.model("usrs", userShema, "usrs");
+}

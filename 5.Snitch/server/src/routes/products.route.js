@@ -60,6 +60,9 @@ productRouter.patch(
   listProductController,
 );
 
+// GET ALL PRODUCTS FOR A SELLER (DASHBOARD)
+productRouter.get("/seller/dashboard", checkUser, checkSeller, getSellerProductsController);
+
 // GET SINGLE PRODUCT BY ID
 productRouter.get("/:id", getSingleProductController);
 
@@ -74,8 +77,5 @@ productRouter.put(
 
 // DELETE PRODUCT BY SELLER
 productRouter.delete("/delete/:id", checkUser, checkSeller, deleteProductController);
-
-// GET ALL PRODUCTS FOR A SELLER (DASHBOARD)
-productRouter.get("/seller/dashboard", checkUser, checkSeller, getSellerProductsController);
 
 export default productRouter;

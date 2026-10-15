@@ -4,9 +4,12 @@ import { restoreSession } from "../features/auth/authSlice";
 import AuthPage from "../features/auth/pages/AuthPage";
 import ProtectedLayout from "../layouts/ProtectedLayout";
 import PublicLayout from "../layouts/PublicLayout";
-import CartPage from "../features/store/pages/CartPage";
+import CartPage from "../features/cart/pages/CartPage";
+import OrdersPage from "../features/cart/pages/OrdersPage";
 import HomePage from "../features/store/pages/HomePage";
-import ProductsPage from "../features/store/pages/ProductsPage";
+import ProductsPage from "../features/products/pages/ProductsPage";
+import ProductDetailPage from "../features/products/pages/ProductDetailPage";
+import SellerDashboardPage from "../features/products/pages/SellerDashboardPage";
 
 function SessionLoading() {
   return (
@@ -49,7 +52,10 @@ export const router = createBrowserRouter([
       { index: true, loader: () => redirect("/home") },
       { path: "home", element: <HomePage /> },
       { path: "products", element: <ProductsPage /> },
+      { path: "products/:id", element: <ProductDetailPage /> },
+      { path: "seller/dashboard", element: <SellerDashboardPage /> },
       { path: "cart", element: <CartPage /> },
+      { path: "orders", element: <OrdersPage /> },
     ],
   },
   { path: "*", loader: () => redirect("/home") },

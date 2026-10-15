@@ -1,6 +1,7 @@
 import { imagekitio } from "../config/ImageKit.js";
 import { toFile } from "@imagekit/nodejs";
 import { productModel } from "../model/product.model.js";
+import { userModel } from "../model/user.model.js";
 // import { imageUpload } from "../config/ImageKit.js";
 
 //create Product in DB by Seller
@@ -111,6 +112,8 @@ export const publishedProducts = async (req, res) => {
         products,
         nextPage: hasNextPage ? page + 1 : null,
         totalPages: Math.ceil(total / limit),
+        total,
+        currentPage: page,
       },
     });
   } catch (error) {

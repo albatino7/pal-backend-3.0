@@ -2,9 +2,9 @@ import { body, validationResult } from "express-validator";
 
 const validation = (req, res, next) => {
   const error = validationResult(req);
-  if (!error.isEmpty) {
-    res.status(400).json({
-      message: "validation failed",
+  if (!error.isEmpty()) {
+    return res.status(400).json({
+      message: "Validation failed",
       err: error.array(),
     });
   }
@@ -27,15 +27,16 @@ export const cartValidation = [
     .bail()
     .isInt({ min: 1 })
     .withMessage("Quantity must be an integer greater than 0"),
-  body("size")
-    .exists()
-    .withMessage("Size is required")
-    .bail()
-    .isString()
-    .withMessage("Size must be a string")
-    .bail()
-    .isIn(["XS", "S", "M", "L", "XL", "XXL"])
-    .withMessage("Size must be one of XS, S, M, L, XL, XXL"),
+  body().custom((body) => {
+    const sizeVal = body.size || body.sizes;
+    if (!sizeVal) {
+      throw new Error("Size is required");
+    }
+    if (!["XS", "S", "M", "L", "XL", "XXL"].includes(sizeVal)) {
+      throw new Error("Size must be one of XS, S, M, L, XL, XXL");
+    }
+    return true;
+  }),
 
   validation,
 ];

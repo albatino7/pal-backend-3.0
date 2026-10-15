@@ -1,10 +1,18 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
+import { Provider } from "react-redux";
+import { QueryClientProvider } from "@tanstack/react-query";
+import store from "./app/store";
+import queryClient from "./app/queryClient";
 import App from "./App.jsx";
-import { ContextProvider } from "./context/MyStore.jsx";
+import "./index.css";
 
 createRoot(document.getElementById("root")).render(
-  <ContextProvider>
-    <App />
-  </ContextProvider>,
+  <StrictMode>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </Provider>
+  </StrictMode>
 );

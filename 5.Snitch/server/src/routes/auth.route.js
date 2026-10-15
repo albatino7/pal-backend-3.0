@@ -4,6 +4,7 @@ import {
   loginController,
   refreshController,
   getmeController,
+  logoutController,
 } from "../controller/auth.controller.js";
 import { registerValidation } from "../validator/registerValidator.js";
 import { loginValidation } from "../validator/loginValidator.js";
@@ -25,5 +26,6 @@ authRouter.post("/login", loginValidation, loginController);
 authRouter.get("/refresh", refreshController);
 
 authRouter.get("/getme", checkUser, getmeController);
+authRouter.post("/logout", logoutController);
 
 export default authRouter;

@@ -10,4 +10,21 @@ export default defineConfig({
       "/api": "http://localhost:3000",
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
+              return "react-vendor";
+            }
+            if (id.includes("@reduxjs") || id.includes("react-redux") || id.includes("@tanstack")) {
+              return "state-vendor";
+            }
+            return "vendor";
+          }
+        },
+      },
+    },
+  },
 });
